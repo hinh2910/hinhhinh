@@ -109,7 +109,8 @@ def draw_text_with_word_indices(
     if not text:
         return y_start
 
-    words_list = text.split()
+    t_mod = re.sub(r'[—–]', ' ', text)
+    words_list = t_mod.split()
     if not words_list:
         return y_start
 

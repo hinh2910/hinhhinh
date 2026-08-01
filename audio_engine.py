@@ -984,7 +984,8 @@ def build_sentence_audio_and_timeline(
 
     def get_words_with_offset(mp3_p, offset_sec, text_fallback=""):
         clean_t = strip_emojis(text_fallback)
-        text_words = clean_t.split()
+        t_mod = re.sub(r'[—–]', ' ', clean_t)
+        text_words = t_mod.split()
         if not text_words:
             return []
 
@@ -992,22 +993,51 @@ def build_sentence_audio_and_timeline(
             w_list = align_audio_with_whisper(mp3_p)
             if w_list:
                 res = []
-                n_text = len(text_words)
+                w_idx = 0
                 n_w = len(w_list)
 
-                for tw_idx, tw in enumerate(text_words):
-                    w_idx_start = int(tw_idx * n_w / n_text)
-                    w_idx_end = min(n_w - 1, int((tw_idx + 1) * n_w / n_text) - 1)
-                    w_idx_end = max(w_idx_start, w_idx_end)
+                for t_idx, tw in enumerate(text_words):
+                    tw_clean = re.sub(r'[^\w]', '', tw.lower())
+                    if not tw_clean:
+                        prev_end = res[-1]["end"] if res else offset_sec
+                        res.append({"word": tw, "start": prev_end, "end": round(prev_end + 0.1, 3)})
+                        continue
 
-                    start_t = w_list[w_idx_start]["start"]
-                    end_t = w_list[w_idx_end]["end"]
+                    # Look ahead up to 6 words in w_list for a fuzzy word match
+                    matched_w_idx = -1
+                    for lookahead in range(min(6, n_w - w_idx)):
+                        curr_w_clean = re.sub(r'[^\w]', '', w_list[w_idx + lookahead]["word"].lower())
+                        if curr_w_clean and (
+                            tw_clean == curr_w_clean or
+                            (len(tw_clean) >= 3 and len(curr_w_clean) >= 3 and (tw_clean.startswith(curr_w_clean[:3]) or curr_w_clean.startswith(tw_clean[:3])))
+                        ):
+                            matched_w_idx = w_idx + lookahead
+                            break
 
-                    res.append({
-                        "word": tw,
-                        "start": round(offset_sec + start_t, 3),
-                        "end":   round(offset_sec + end_t, 3)
-                    })
+                    if matched_w_idx != -1:
+                        w_obj = w_list[matched_w_idx]
+                        res.append({
+                            "word": tw,
+                            "start": round(offset_sec + w_obj["start"], 3),
+                            "end":   round(offset_sec + w_obj["end"], 3)
+                        })
+                        w_idx = matched_w_idx + 1
+                    else:
+                        if w_idx < n_w:
+                            w_obj = w_list[w_idx]
+                            res.append({
+                                "word": tw,
+                                "start": round(offset_sec + w_obj["start"], 3),
+                                "end":   round(offset_sec + w_obj["end"], 3)
+                            })
+                            w_idx += 1
+                        else:
+                            last_end = res[-1]["end"] if res else offset_sec
+                            res.append({
+                                "word": tw,
+                                "start": last_end,
+                                "end": round(last_end + 0.25, 3)
+                            })
                 return res
         except Exception as e:
             print(f"Whisper align warning in get_words_with_offset: {e}")
