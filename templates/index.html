@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadowing English Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Studio Header -->
+  <header class="studio-header">
+    <div class="header-brand">
+      <div class="brand-icon">🗣️</div>
+      <div class="brand-title">
+        <h1>SHADOWING ENGLISH STUDIO</h1>
+        <span class="brand-subtitle">Listen · Shadow · Improve (>= 12 Mins Video)</span>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-indicator">
+        <span class="status-dot pulsing"></span>
+        <span>Local GPU CUDA Active</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-container">
+
+    <!-- Video Mode Selector Bar -->
+    <div class="mode-selector-bar" style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;">
+      <button class="mode-tab-btn active" id="btn-mode-long" data-mode="long">
+        🎥 Video Dài (Shadowing 4 Phần)
+      </button>
+      <button class="mode-tab-btn" id="btn-mode-sentence" data-mode="sentence">
+        💬 20 Essential Sentences (Hỏi - Đáp)
+      </button>
+      <button class="mode-tab-btn" id="btn-mode-short" data-mode="short">
+        📱 Video Short (Vertical 9:16)
+      </button>
+    </div>
+
+
+    <!-- Step Buttons Nav -->
+    <div class="steps-nav">
+      <button class="step-btn active" data-step="1">
+        <span class="step-num">01</span>
+        <span class="step-text">Prompt ChatGPT</span>
+      </button>
+      <button class="step-btn" data-step="2">
+        <span class="step-num">02</span>
+        <span class="step-text">Dán Kịch Bản & Chọn Giọng</span>
+      </button>
+      <button class="step-btn" data-step="3">
+        <span class="step-num">03</span>
+        <span class="step-text">Render Video & Xem Trực Tiếp</span>
+      </button>
+      <button class="step-btn" data-step="4">
+        <span class="step-num">04</span>
+        <span class="step-text">Thư Viện Video & Metadata</span>
+      </button>
+    </div>
+
+    <!-- Step Contents -->
+    <main class="main-workspace">
+
+      <!-- STEP 1: PROMPT GENERATOR -->
+      <section class="card step-content active" id="step-1">
+        <div class="card-header">
+          <h2 id="step1-header-title">📝 Bước 1: Lấy Prompt Chuẩn Kịch Bản (>= 12 Phút)</h2>
+          <p id="step1-header-desc">Nhập chủ đề bài học và copy prompt để ChatGPT viết kịch bản từ vựng giao tiếp đơn giản A2/B1 truyền cảm hứng cho người học.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="prompt-topic">Chủ đề bài học (Topic):</label>
+          <input type="text" id="prompt-topic" value="10-Day English Speaking Challenge | Daily Life & Confidence" class="custom-input">
+        </div>
+
+        <div class="form-group">
+          <label for="prompt-text">Nội dung Prompt ChatGPT:</label>
+          <textarea id="prompt-text" class="form-control code-area" rows="12" readonly></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-copy-prompt">
+            📋 Copy Prompt Vừa Tạo
+          </button>
+          <button class="btn btn-secondary" id="btn-goto-step2">
+            Chuyển sang Bước 2 (Dán Kịch Bản) ➔
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 2: SCRIPT INPUT & VOICE SELECTORS -->
+      <section class="card step-content" id="step-2">
+        <div class="card-header">
+          <h2 id="step2-header-title">📥 Bước 2: Dán Kịch Bản & Chọn Giọng Đọc (Libby Intro + Sonia Shadowing)</h2>
+          <p id="step2-header-desc">Mặc định sử dụng <strong>Giọng Libby</strong> cho lời dẫn Intro và <strong>Giọng Sonia</strong> cho đoạn Shadowing luyện tập. Hệ thống tự sửa lỗi cú pháp JSON.</p>
+        </div>
+
+        <!-- 1 Image Uploader (Shown ONLY in Short Mode) -->
+        <div id="short-video-clips-box" style="display: none; background: rgba(217, 56, 30, 0.06); padding: 16px; border-radius: 10px; border: 1px dashed var(--accent-blood); margin-bottom: 20px;">
+          <h3 style="color: var(--accent-blood); font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            🖼️ Import 1 Ảnh Nền Cho Video Short (Hiển thị phần trên 1080x800)
+          </h3>
+          <div>
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Chọn 1 Hình Ảnh (JPG, PNG, WEBP):</label>
+            <input type="file" id="short-image-file" accept="image/png,image/jpeg,image/webp,image/jpg" class="custom-input" style="padding: 8px; font-size: 13px;">
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px; margin-bottom: 0;">
+            💡 <em>Nếu không chọn ảnh, hệ thống sẽ tự động sử dụng ảnh nền hoặc video mặc định.</em>
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+          
+          <!-- Intro / Short Main Voice Selector -->
+          <div class="form-group">
+            <label for="intro-voice-select" id="lbl-intro-voice">🎙️ Giọng đọc Phần Intro (Dẫn Chuyện):</label>
+            <select id="intro-voice-select" class="custom-select">
+              <optgroup label="🌟 KHUYÊN DÙNG MẶC ĐỊNH">
+                <option value="en-US-JennyNeural" selected>👩 Jenny (Mỹ US - Nữ, Rõ ràng, Tự nhiên)</option>
+              </optgroup>
+              <optgroup label="👩 GIỌNG NỮ KHÁC">
+                <option value="en-GB-LibbyNeural">👩 Libby (Anh UK - Nữ, Nhẹ nhàng)</option>
+                <option value="en-GB-SoniaNeural">👩 Sonia (Anh UK - Nữ, Chuẩn)</option>
+                <option value="en-US-AvaNeural">👩 Ava (Mỹ US - Nữ, Truyền cảm)</option>
+                <option value="en-US-EmmaNeural">👩 Emma (Mỹ US - Nữ, Nhẹ nhàng)</option>
+                <option value="en-US-AriaNeural">👩 Aria (Mỹ US - Nữ, Ấm áp)</option>
+              </optgroup>
+            </select>
+
+            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-dark);">
+              <span style="font-size: 12px; color: var(--text-muted);">Nghe thử Giọng:</span>
+              <audio id="intro-voice-player" controls style="height: 28px; width: 180px;"></audio>
+            </div>
+          </div>
+
+          <!-- Shadowing Voice Selector (For Long Video) -->
+          <div class="form-group" id="shadowing-voice-container">
+            <label for="shadowing-voice-select">🎯 Giọng đọc Phần Shadowing (Luyện Nói):</label>
+            <select id="shadowing-voice-select" class="custom-select">
+              <optgroup label="🌟 KHUYÊN DÙNG MẶC ĐỊNH">
+                <option value="en-GB-SoniaNeural" selected>👩 Sonia (Anh UK - Nữ, Chuẩn Giọng, Phát Âm Rõ)</option>
+              </optgroup>
+              <optgroup label="👩 GIỌNG NỮ KHÁC">
+                <option value="en-GB-LibbyNeural">👩 Libby (Anh UK - Nữ, Nhẹ nhàng)</option>
+                <option value="en-US-AvaNeural">👩 Ava (Mỹ US - Nữ, Truyền cảm)</option>
+                <option value="en-US-JennyNeural">👩 Jenny (Mỹ US - Nữ, Rõ ràng)</option>
+                <option value="en-US-EmmaNeural">👩 Emma (Mỹ US - Nữ, Nhẹ nhàng)</option>
+                <option value="en-US-AriaNeural">👩 Aria (Mỹ US - Nữ, Ấm áp)</option>
+              </optgroup>
+            </select>
+
+            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-dark);">
+              <span style="font-size: 12px; color: var(--text-muted);">Nghe thử Shadowing:</span>
+              <audio id="shadowing-voice-player" controls style="height: 28px; width: 180px;"></audio>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="rate-select">Tốc độ đọc (TTS Speed & Nhấn Mạnh):</label>
+          <select id="rate-select" class="custom-select">
+            <option value="-10%" selected>Giảm 10% Tốc Độ (-10%) [Mặc định Chuẩn Mượt]</option>
+            <option value="-15%">Giảm 15% Tốc Độ (-15%)</option>
+            <option value="-8%">Giảm 8% Tốc Độ (-8%)</option>
+            <option value="-20%">Rất Chậm & Rõ Chi Tiết (-20%)</option>
+            <option value="+0%">Tốc Độ Bình Thường (+0%)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="script-json">Kịch bản JSON từ ChatGPT (Tự sửa lỗi cú pháp dán vào):</label>
+          <textarea id="script-json" class="form-control code-area" rows="14" placeholder='Dán JSON kịch bản từ ChatGPT vào đây...'></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary btn-large" id="btn-start-render">
+            🚀 Bắt Đầu Render Video Tự Động
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: RENDER & REALTIME PROGRESS -->
+      <section class="card step-content" id="step-3">
+        <div class="card-header">
+          <h2>⚡ Bước 3: Tiến Trình Render (Whisper GPU CUDA + FFmpeg)</h2>
+          <p>Hệ thống đang tự động bóc tách âm thanh, căn mồm nhân vật và tô chữ màu ĐỎ theo từ.</p>
+        </div>
+
+        <div class="progress-box">
+          <div class="progress-header">
+            <span id="status-text">Đang chuẩn bị...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Video Preview Container -->
+        <div class="video-preview-container" id="video-preview-box" style="display: none; text-align: center;">
+          <h3 style="color: var(--accent-blood); margin-bottom: 12px;">🎉 Render Hoàn Tất! Xem Trực Tiếp Video:</h3>
+          <video id="main-video-player" controls class="video-player"></video>
+          <div class="btn-group" style="justify-content: center;">
+            <a id="btn-download-video" class="btn btn-primary" download>
+              📥 Tải Video MP4 Đầy Đủ
+            </a>
+            <button class="btn btn-secondary" id="btn-goto-step4">
+              Chuyển sang Bước 4 (Thư Viện & SEO) ➔
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 4: OUTPUTS LIBRARY & METADATA -->
+      <section class="card step-content" id="step-4">
+        <div class="card-header">
+          <h2>📁 Bước 4: Thư Viện Video Đã Tạo & Metadata YouTube</h2>
+          <p>Danh sách các video đã render thành công và Tiêu đề / Mô tả mẫu chuẩn SEO.</p>
+        </div>
+
+        <!-- YouTube Metadata Box -->
+        <div style="margin-bottom: 24px; padding: 20px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-dark);">
+          <h3 style="color: var(--accent-blood); font-size: 16px; margin-bottom: 12px;">📌 Metadata Mẫu Đăng YouTube</h3>
+          
+          <div class="form-group">
+            <label for="yt-title">Tiêu đề YouTube (Title):</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="yt-title" class="custom-input" readonly>
+              <button class="btn btn-secondary" id="btn-copy-title">Copy Title</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="yt-desc">Mô tả YouTube (Description):</label>
+            <textarea id="yt-desc" class="form-control code-area" rows="8" readonly></textarea>
+            <button class="btn btn-secondary" id="btn-copy-desc" style="margin-top: 10px;">Copy Description</button>
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;">
+            <label for="yt-pinned">📌 Bình Luận Mẫu Để Ghim Lên Đầu (Pinned Comment):</label>
+            <textarea id="yt-pinned" class="form-control code-area" rows="6" readonly></textarea>
+            <button class="btn btn-secondary" id="btn-copy-pinned" style="margin-top: 10px;">📋 Copy Pinned Comment</button>
+          </div>
+        </div>
+
+        <!-- Rendered Outputs List -->
+        <h3 style="color: var(--text-primary); font-size: 16px; margin-bottom: 12px;">🎥 Các Video Đã Xuất Bản Trong Thư Mục output/</h3>
+        <div id="outputs-list-container" class="output-list">
+          <p style="color: var(--text-muted);">Đang tải danh sách video...</p>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
