@@ -132,7 +132,7 @@ def draw_text_with_word_indices(
     if curr_line:
         lines.append(curr_line)
 
-    # Multi-page pagination: group lines into 3-line pages and switch pages smoothly as audio reads
+    # Multi-page pagination: group lines into max_lines pages and switch pages smoothly ONLY when audio reads that page
     if max_lines and len(lines) > max_lines:
         pages = [lines[p : p + max_lines] for p in range(0, len(lines), max_lines)]
         
@@ -143,13 +143,21 @@ def draw_text_with_word_indices(
                 if active_word_idx >= first_w_idx:
                     current_page_idx = p_idx
         else:
-            # Fallback based on time ratio during silent gaps between words to prevent any flickering
-            if end_time > start_time and active_time >= start_time:
-                if active_time >= end_time:
-                    current_page_idx = len(pages) - 1
-                else:
-                    ratio = (active_time - start_time) / (end_time - start_time)
-                    current_page_idx = min(len(pages) - 1, int(ratio * len(pages)))
+            # During silent gaps between words, find the last spoken word so page NEVER jumps early or flickers
+            last_spoken_w_idx = -1
+            if words:
+                for idx_w, w in enumerate(words):
+                    if active_time >= w['start']:
+                        last_spoken_w_idx = idx_w
+                    else:
+                        break
+            if last_spoken_w_idx >= 0:
+                for p_idx, page in enumerate(pages):
+                    first_w_idx = page[0][0][1]
+                    if last_spoken_w_idx >= first_w_idx:
+                        current_page_idx = p_idx
+            else:
+                current_page_idx = 0
 
         lines_to_draw = pages[current_page_idx]
     else:
@@ -220,7 +228,7 @@ def render_sentence_frame(
         start_t = slide_data.get("start_time", 0.0)
         end_t = slide_data.get("end_time", 1.0)
 
-        # Draw with full 46pt BOLD FONT without pagination limit so full intro monologue is displayed without page jumps
+        # Draw with 3-line clean pagination to prevent text overflow at the bottom of the canvas
         draw_text_with_word_indices(
             draw,
             text=explanation,
@@ -232,7 +240,7 @@ def render_sentence_frame(
             active_time=current_time,
             normal_color=(51, 65, 85, 255),
             align_center=True,
-            max_lines=None,
+            max_lines=3,
             start_time=start_t,
             end_time=end_t
         )
