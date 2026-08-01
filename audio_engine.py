@@ -1173,10 +1173,14 @@ def build_sentence_audio_and_timeline(
         current_time += dur_head + 0.3
         combined_audio_frames.append(create_silence(0.3, sample_rate))
 
-        # b. Host reads Explanation
+        # b. Host reads Explanation with smooth transition phrase ("This means, ")
         if explanation:
             tmp_exp = os.path.join(temp_dir, f"exp_{idx}.mp3")
-            generate_tts_sync(explanation, voice=host_voice, rate=rate, output_path=tmp_exp)
+            exp_tts_text = explanation
+            if not explanation.lower().startswith(("this means", "meaning", "it means", "this expression")):
+                exp_tts_text = f"This means, {explanation}"
+
+            generate_tts_sync(exp_tts_text, voice=host_voice, rate=rate, output_path=tmp_exp)
             aud_exp = get_audio_from_mp3(tmp_exp)
             dur_exp = len(aud_exp) / sample_rate
             exp_words = get_words_with_offset(tmp_exp, current_time, explanation)
