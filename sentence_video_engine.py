@@ -220,24 +220,24 @@ def render_sentence_frame(
         start_t = slide_data.get("start_time", 0.0)
         end_t = slide_data.get("end_time", 1.0)
 
-        # Draw with full 38pt BOLD FONT (BIG) & 3-line multi-page auto pagination
+        # Draw with full 46pt BOLD FONT without pagination limit so full intro monologue is displayed without page jumps
         draw_text_with_word_indices(
             draw,
             text=explanation,
             words=words,
-            font=fonts["exp"],           # ALWAYS BIG 38pt BOLD FONT!
+            font=fonts["exp"],           # ALWAYS BIG 46pt BOLD FONT!
             x_pos=center_x,
-            y_start=295,
+            y_start=280,
             max_w=850,
             active_time=current_time,
             normal_color=(51, 65, 85, 255),
             align_center=True,
-            max_lines=3,
+            max_lines=None,
             start_time=start_t,
             end_time=end_t
         )
 
-        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=680, num_bars=35, bar_color=(217, 119, 6))
+        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=900, num_bars=35, bar_color=(217, 119, 6))
         return canvas
 
 
@@ -272,7 +272,6 @@ def render_sentence_frame(
     # 3. MAIN TARGET SENTENCE (Centered at X=650, Y=140)
     main_end_y = 140
     if main_sent:
-        # Use 44pt font if long (> 8 words), otherwise 54pt font
         main_font = fonts["main_small"] if len(main_sent.split()) > 8 else fonts["main"]
         main_end_y = draw_text_with_word_indices(
             draw,
@@ -286,7 +285,7 @@ def render_sentence_frame(
             normal_color=(30, 41, 59, 255),
             target_word=target_word,
             align_center=True,
-            max_lines=2
+            max_lines=None
         )
 
     # 4. EXPLANATION / CONTEXT (Dynamically placed below main_sent: max(280, main_end_y + 12))
@@ -303,7 +302,7 @@ def render_sentence_frame(
             active_time=current_time,
             normal_color=(71, 85, 105, 255),
             align_center=True,
-            max_lines=2
+            max_lines=None
         )
 
 
@@ -372,23 +371,23 @@ def render_sentence_frame(
         # Status text without missing font emoji box
         status_str = "YOUR TURN! SPEAK NOW!"
         sw = fonts["status"].getlength(status_str)
-        draw.text((int(center_x - sw / 2), 735), status_str, fill=(active_color[0], active_color[1], active_color[2], 255), font=fonts["status"])
+        draw.text((int(center_x - sw / 2), 750), status_str, fill=(active_color[0], active_color[1], active_color[2], 255), font=fonts["status"])
 
         # Progress bar
         bar_x = 350
-        bar_y = 785
+        bar_y = 805
         bar_w = 600
         draw.rounded_rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + 12], radius=6, fill=(226, 232, 240, 255))
         if progress > 0:
             fill_w = int(bar_w * progress)
             draw.rounded_rectangle([bar_x, bar_y, bar_x + fill_w, bar_y + 12], radius=6, fill=(active_color[0], active_color[1], active_color[2], 255))
 
-        # Dynamic Soundwave during pause
-        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=845, num_bars=35, bar_color=active_color)
+        # Dynamic Soundwave during pause (Shifted down to Y=900 to eliminate text overlap)
+        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=900, num_bars=35, bar_color=active_color)
     else:
-        # Dynamic Soundwave during host/speaker talking
+        # Dynamic Soundwave during host/speaker talking (Shifted down to Y=900 to eliminate text overlap)
         talk_color = (217, 119, 6) if is_q_active else ((4, 120, 87) if is_a_active else (217, 119, 6))
-        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=750, num_bars=35, bar_color=talk_color)
+        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=900, num_bars=35, bar_color=talk_color)
 
 
 
