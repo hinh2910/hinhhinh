@@ -239,10 +239,10 @@ def render_frame_overlay(base_img, text, words, active_time, progress_ratio, fon
         active_word_clean = re.sub(r'[^\w]', '', active_w_obj.get('word', '').lower()) if active_w_obj else ''
 
         try:
-            font_q = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 38)
-            font_opt = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 36)
-            font_ans = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 36)
-            font_exp = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 30)
+            font_q = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 48)
+            font_opt = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 44)
+            font_ans = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 44)
+            font_exp = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 38)
         except:
             font_q = font_large
             font_opt = font_small
@@ -347,28 +347,28 @@ def render_frame_overlay(base_img, text, words, active_time, progress_ratio, fon
     x_start, y_start = 1070, 260
     max_w = 740
 
-    # Determine dynamic font size based on word count & section type (Larger & more prominent subtitles)
+    # Determine dynamic font size based on word count & section type (Larger & more prominent subtitles for mobile)
     try:
-        current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 64)
+        current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 74)
     except:
         current_font = font_large
-    line_height = 86
+    line_height = 98
 
     if len(words_list) > 10:
         try:
-            current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 56)
+            current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 64)
         except:
             current_font = font_large
-        line_height = 76
+        line_height = 86
 
     is_quiz_text = (section_type in ["intro_story", "intro_quiz"]) and any(k in text.lower() for k in ["option", "choice", "a:", "b:", "c:", "d:"])
     
     if is_quiz_text:
         try:
-            current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 42)
+            current_font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 52)
         except:
             current_font = font_small
-        line_height = 56
+        line_height = 68
 
     lines = []
     curr_line = []

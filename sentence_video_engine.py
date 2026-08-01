@@ -15,14 +15,14 @@ def get_sentence_fonts():
     """Load bold, high-definition Segoe UI fonts matching video_engine.py L352-L370."""
     font_path_bold = "C:/Windows/Fonts/segoeuib.ttf"
     try:
-        font_num = ImageFont.truetype(font_path_bold, 38)
-        font_main = ImageFont.truetype(font_path_bold, 54)             # Prominent 54pt bold
-        font_main_small = ImageFont.truetype(font_path_bold, 44)       # Clean 44pt bold for longer sentences
-        font_exp = ImageFont.truetype(font_path_bold, 36)              # Crisp 36pt bold
-        font_dlg_hdr = ImageFont.truetype(font_path_bold, 28)
-        font_dlg_body = ImageFont.truetype(font_path_bold, 34)         # Prominent 34pt bold
-        font_dlg_body_small = ImageFont.truetype(font_path_bold, 28)   # Clean 28pt bold for longer dialogue
-        font_status = ImageFont.truetype(font_path_bold, 36)
+        font_num = ImageFont.truetype(font_path_bold, 46)
+        font_main = ImageFont.truetype(font_path_bold, 68)             # Prominent 68pt bold for mobile
+        font_main_small = ImageFont.truetype(font_path_bold, 56)       # Clean 56pt bold for longer sentences
+        font_exp = ImageFont.truetype(font_path_bold, 46)              # Crisp 46pt bold
+        font_dlg_hdr = ImageFont.truetype(font_path_bold, 38)
+        font_dlg_body = ImageFont.truetype(font_path_bold, 46)         # Prominent 46pt bold
+        font_dlg_body_small = ImageFont.truetype(font_path_bold, 38)   # Clean 38pt bold for longer dialogue
+        font_status = ImageFont.truetype(font_path_bold, 48)
     except Exception as e:
         print(f"Warning loading Segoe UI fonts ({e}), fallback to default...")
         font_num = ImageFont.load_default()
@@ -330,7 +330,7 @@ def render_sentence_frame(
             words=words if is_q_active else [],
             font=q_font,
             x_pos=left_x,
-            y_start=dialogue_y + 38,
+            y_start=dialogue_y + 48,
             max_w=440,
             active_time=current_time,
             normal_color=(30, 41, 59, 255) if is_q_active else (148, 163, 184, 255),
@@ -350,7 +350,7 @@ def render_sentence_frame(
             words=words if is_a_active else [],
             font=a_font,
             x_pos=right_x,
-            y_start=dialogue_y + 38,
+            y_start=dialogue_y + 48,
             max_w=450,
             active_time=current_time,
             normal_color=(30, 41, 59, 255) if is_a_active else (148, 163, 184, 255),

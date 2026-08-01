@@ -136,7 +136,7 @@ def render_short_frame(top_frame, paper_bg, title, text, words, current_time, fo
     x_start = 70
     y_start = 710
     max_w = 940
-    line_h = 74
+    line_h = 88
 
     lines = []
     curr_line = []
@@ -310,12 +310,12 @@ def render_short_video(media_paths=None, audio_path=None, title="", text="", wor
     # Font setup
     font_path_bold = "C:/Windows/Fonts/segoeuib.ttf"
     try:
-        font_title = ImageFont.truetype(font_path_bold, 54)
-        font_body = ImageFont.truetype(font_path_bold, 44)
+        font_title = ImageFont.truetype(font_path_bold, 68)
+        font_body = ImageFont.truetype(font_path_bold, 56)
     except:
         try:
-            font_title = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 54)
-            font_body = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 44)
+            font_title = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 68)
+            font_body = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 56)
         except:
             font_title = ImageFont.load_default()
             font_body = ImageFont.load_default()
