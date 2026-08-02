@@ -43,9 +43,9 @@ def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
         font_hook = ImageFont.truetype(FONT_PATH_BOLD, 52)
-        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 46)
-        font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 48)
-        font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 42)
+        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 48)
+        font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 54)        # Heavy bold font matching screenshot
+        font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 44)      # Prominent 44pt bold font for options
         font_timer = ImageFont.truetype(FONT_PATH_BOLD, 56)
         font_cta = ImageFont.truetype(FONT_PATH_BOLD, 48)
     except Exception as e:
@@ -67,6 +67,41 @@ def get_quiz_fonts():
         "timer": font_timer,
         "cta": font_cta
     }
+
+def prepare_question_audio(q_num, q_txt, voice, rate, temp_dir, idx, sample_rate=44100):
+    """
+    Cleans question_txt by removing blanks ('______', '......', '___') for TTS.
+    Synthesizes each text part separately and inserts a 1.5s silence gap where the blank is,
+    so TTS never pronounces 'underscore' or 'dot' and viewers naturally understand a blank word.
+    """
+    clean_q = re.sub(r'^(?:Question\s*\d+:?\s*)', '', q_txt, flags=re.IGNORECASE).strip()
+    raw_parts = re.split(r'(?:_{2,}|\.{2,}|\(blank\))', clean_q)
+    parts = [p.strip() for p in raw_parts if p.strip()]
+
+    if len(parts) <= 1:
+        p_q = os.path.join(temp_dir, f"q_{idx}.mp3")
+        generate_tts_sync(f"Question {q_num}: {q_txt}", voice=voice, rate=rate, output_path=p_q)
+        aud = get_audio_from_mp3(p_q, sample_rate=sample_rate)
+        return aud, len(aud) / sample_rate
+
+    # Blank question with 2+ parts: insert 1.5s silence gap in place of blank!
+    audio_segments = []
+    p_q0 = os.path.join(temp_dir, f"q_{idx}_0.mp3")
+    generate_tts_sync(f"Question {q_num}: {parts[0]}", voice=voice, rate=rate, output_path=p_q0)
+    audio_segments.append(get_audio_from_mp3(p_q0, sample_rate=sample_rate))
+
+    # Add 1.5s silence gap for the blank
+    audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
+
+    for p_idx, part in enumerate(parts[1:], 1):
+        p_qp = os.path.join(temp_dir, f"q_{idx}_{p_idx}.mp3")
+        generate_tts_sync(part, voice=voice, rate=rate, output_path=p_qp)
+        audio_segments.append(get_audio_from_mp3(p_qp, sample_rate=sample_rate))
+        if p_idx < len(parts) - 1:
+            audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
+
+    combined_aud = np.concatenate(audio_segments)
+    return combined_aud, len(combined_aud) / sample_rate
 
 def load_quiz_backgrounds():
     """Load and scale purple quiz background images to 1080x1920 canvas size."""
@@ -202,10 +237,8 @@ def build_short_quiz_audio_and_timeline(
         opt_d = q.get("option_d", "")
         c_opt = str(q.get("correct_option", "A")).upper().strip()
 
-        # Step 2a: Read Question Audio
-        p_q = os.path.join(temp_dir, f"q_{idx}.mp3")
-        aud_q = get_audio_from_mp3(p_q, sample_rate=sample_rate)
-        dur_q = len(aud_q) / sample_rate
+        # Step 2a: Read Question Audio with 1.5s silence gap for blanks (____ / ....)
+        aud_q, dur_q = prepare_question_audio(q_num, q_txt, voice, rate, temp_dir, idx, sample_rate=sample_rate)
 
         combined_audio_frames.append(aud_q)
         timeline.append({
