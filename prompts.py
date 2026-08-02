@@ -420,8 +420,8 @@ NGUYÊN TẮC BIÊN KỊCH ĐẮT GIÁ (TĂNG TỶ LỆ GIỮ CHÂN KHÁN GIẢ 
     }}
   ]
 }}
+"""
 
-```
 CHATGPT_SHORT_QUIZ_PROMPT = """Bạn là biên kịch chuyên nghiệp tạo kịch bản Video Short Trắc Nghiệm Tiếng Anh ("English Quiz Challenge") cho kênh "Shadowing English".
 Hãy tạo kịch bản LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI trắc nghiệm A, B, C, D trình độ B1-B2 kích thích người xem cho chủ đề "{topic}" theo đúng chuẩn định dạng JSON dưới đây.
 
