@@ -20,10 +20,10 @@ from audio_engine import (
 )
 
 def get_audio_from_mp3(mp3_path, sample_rate=44100):
-    """Load audio PCM samples from an MP3 or audio file using PyAV."""
+    """Load audio PCM samples from an MP3 or audio file as normalized float32 using PyAV."""
     try:
         container = av.open(mp3_path)
-        resampler = av.AudioResampler(format='s16', layout='mono', rate=sample_rate)
+        resampler = av.AudioResampler(format='flt', layout='mono', rate=sample_rate)
         frames = []
         for frame in container.decode(audio=0):
             resampled = resampler.resample(frame)
@@ -32,10 +32,10 @@ def get_audio_from_mp3(mp3_path, sample_rate=44100):
         container.close()
         if frames:
             return np.concatenate(frames, axis=1).flatten()
-        return np.array([], dtype=np.int16)
+        return np.zeros(0, dtype=np.float32)
     except Exception as e:
         print(f"Error loading audio from {mp3_path}: {e}")
-        return np.array([], dtype=np.int16)
+        return np.zeros(0, dtype=np.float32)
 
 FONT_PATH_BOLD = "C:/Windows/Fonts/segoeuib.ttf"
 FONT_PATH_REG = "C:/Windows/Fonts/segoeui.ttf"
@@ -118,7 +118,7 @@ def load_quiz_backgrounds():
     return bg_solid, bg_card
 
 def load_clock_ticking_audio(sample_rate=44100, target_duration=3.0):
-    """Load the 3-second clock ticking sound effect at soft background volume (25%)."""
+    """Load the 3-second clock ticking sound effect at soft float32 volume (10%)."""
     ticking_path = "video/YTSave_YouTube_Clock-Ticking-Sound-Effect_Media_o5jaeEUbpFc_009_128k.mp3"
     if not os.path.exists(ticking_path):
         print(f"Warning: Clock ticking audio not found at {ticking_path}, creating silence fallback...")
@@ -126,14 +126,14 @@ def load_clock_ticking_audio(sample_rate=44100, target_duration=3.0):
 
     try:
         audio = get_audio_from_mp3(ticking_path, sample_rate=sample_rate)
-        # Soften volume to 25%
-        audio = (audio * 0.25).astype(np.int16)
+        # Soften float32 volume to 10%
+        audio = audio * 0.10
 
         req_len = int(target_duration * sample_rate)
         if len(audio) >= req_len:
             return audio[:req_len]
         else:
-            silence = np.zeros(req_len - len(audio), dtype=np.int16)
+            silence = np.zeros(req_len - len(audio), dtype=np.float32)
             return np.concatenate((audio, silence))
     except Exception as e:
         print(f"Error loading clock ticking audio: {e}")
@@ -319,8 +319,12 @@ def build_short_quiz_audio_and_timeline(
     })
     current_time += dur_outro
 
-    # Combine & Export Audio WAV using soundfile
+    # Combine & Export Audio WAV with Peak Normalization (-3dB)
     full_audio = np.concatenate(combined_audio_frames)
+    max_peak = np.max(np.abs(full_audio))
+    if max_peak > 0:
+        full_audio = (full_audio / max_peak) * 0.70  # Cap peak at 70% (-3dB) to prevent clipping & headphone strain
+
     os.makedirs(os.path.dirname(output_audio_path), exist_ok=True)
     import soundfile as sf
     sf.write(output_audio_path, full_audio, sample_rate)
