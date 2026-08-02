@@ -15,6 +15,7 @@ from audio_engine import (
     generate_tts_sync,
     create_silence,
     strip_emojis,
+    clean_tts_speech,
     generate_srt_file
 )
 
@@ -43,7 +44,7 @@ def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
         font_hook = ImageFont.truetype(FONT_PATH_BOLD, 52)
-        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 48)
+        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 56)        # Large 56pt bold font for question number
         font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 54)        # Heavy bold font matching screenshot
         font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 44)      # Prominent 44pt bold font for options
         font_timer = ImageFont.truetype(FONT_PATH_BOLD, 56)
@@ -68,37 +69,31 @@ def get_quiz_fonts():
         "cta": font_cta
     }
 
-def prepare_question_audio(q_num, q_txt, voice, rate, temp_dir, idx, sample_rate=44100):
+def prepare_question_audio(q_num, q_txt, temp_dir, idx, sample_rate=44100):
     """
-    Cleans question_txt by removing blanks ('______', '......', '___') for TTS.
-    Synthesizes each text part separately and inserts a 1.5s silence gap where the blank is,
-    so TTS never pronounces 'underscore' or 'dot' and viewers naturally understand a blank word.
+    Loads pre-generated TTS audio files for question text.
+    If the question contains blanks ('______', '......'), inserts a 1.5s silence gap in between.
     """
     clean_q = re.sub(r'^(?:Question\s*\d+:?\s*)', '', q_txt, flags=re.IGNORECASE).strip()
     raw_parts = re.split(r'(?:_{2,}|\.{2,}|\(blank\))', clean_q)
-    parts = [p.strip() for p in raw_parts if p.strip()]
+    parts = [clean_tts_speech(p) for p in raw_parts if clean_tts_speech(p)]
 
     if len(parts) <= 1:
         p_q = os.path.join(temp_dir, f"q_{idx}.mp3")
-        generate_tts_sync(f"Question {q_num}: {q_txt}", voice=voice, rate=rate, output_path=p_q)
         aud = get_audio_from_mp3(p_q, sample_rate=sample_rate)
         return aud, len(aud) / sample_rate
 
-    # Blank question with 2+ parts: insert 1.5s silence gap in place of blank!
     audio_segments = []
     p_q0 = os.path.join(temp_dir, f"q_{idx}_0.mp3")
-    generate_tts_sync(f"Question {q_num}: {parts[0]}", voice=voice, rate=rate, output_path=p_q0)
     audio_segments.append(get_audio_from_mp3(p_q0, sample_rate=sample_rate))
-
-    # Add 1.5s silence gap for the blank
     audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
 
     for p_idx, part in enumerate(parts[1:], 1):
         p_qp = os.path.join(temp_dir, f"q_{idx}_{p_idx}.mp3")
-        generate_tts_sync(part, voice=voice, rate=rate, output_path=p_qp)
-        audio_segments.append(get_audio_from_mp3(p_qp, sample_rate=sample_rate))
-        if p_idx < len(parts) - 1:
-            audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
+        if os.path.exists(p_qp):
+            audio_segments.append(get_audio_from_mp3(p_qp, sample_rate=sample_rate))
+            if p_idx < len(parts) - 1:
+                audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
 
     combined_aud = np.concatenate(audio_segments)
     return combined_aud, len(combined_aud) / sample_rate
@@ -123,7 +118,7 @@ def load_quiz_backgrounds():
     return bg_solid, bg_card
 
 def load_clock_ticking_audio(sample_rate=44100, target_duration=3.0):
-    """Load the 3-second clock ticking sound effect."""
+    """Load the 3-second clock ticking sound effect at soft background volume (25%)."""
     ticking_path = "video/YTSave_YouTube_Clock-Ticking-Sound-Effect_Media_o5jaeEUbpFc_009_128k.mp3"
     if not os.path.exists(ticking_path):
         print(f"Warning: Clock ticking audio not found at {ticking_path}, creating silence fallback...")
@@ -131,6 +126,9 @@ def load_clock_ticking_audio(sample_rate=44100, target_duration=3.0):
 
     try:
         audio = get_audio_from_mp3(ticking_path, sample_rate=sample_rate)
+        # Soften volume to 25%
+        audio = (audio * 0.25).astype(np.int16)
+
         req_len = int(target_duration * sample_rate)
         if len(audio) >= req_len:
             return audio[:req_len]
@@ -182,7 +180,7 @@ def build_short_quiz_audio_and_timeline(
 
         tasks = []
         p_hook = os.path.join(temp_dir, "intro_hook.mp3")
-        tasks.append(sem_tts(intro_hook, voice, rate, p_hook))
+        tasks.append(sem_tts(clean_tts_speech(intro_hook), voice, rate, p_hook))
 
         for idx, q in enumerate(questions):
             q_num = q.get("q_num", idx + 1)
@@ -194,14 +192,25 @@ def build_short_quiz_audio_and_timeline(
                 opt_val = q.get(opt_key, "")
                 c_txt = f"{c_opt}: {opt_val}" if opt_val else c_opt
 
-            p_q = os.path.join(temp_dir, f"q_{idx}.mp3")
-            p_ans = os.path.join(temp_dir, f"ans_{idx}.mp3")
+            clean_q = re.sub(r'^(?:Question\s*\d+:?\s*)', '', q_txt, flags=re.IGNORECASE).strip()
+            raw_parts = re.split(r'(?:_{2,}|\.{2,}|\(blank\))', clean_q)
+            parts = [clean_tts_speech(p) for p in raw_parts if clean_tts_speech(p)]
 
-            tasks.append(sem_tts(f"Question {q_num}: {q_txt}", voice, rate, p_q))
-            tasks.append(sem_tts(f"Correct answer is {c_txt}", voice, rate, p_ans))
+            if len(parts) <= 1:
+                p_q = os.path.join(temp_dir, f"q_{idx}.mp3")
+                tasks.append(sem_tts(clean_tts_speech(f"Question {q_num}: {q_txt}"), voice, rate, p_q))
+            else:
+                p_q0 = os.path.join(temp_dir, f"q_{idx}_0.mp3")
+                tasks.append(sem_tts(clean_tts_speech(f"Question {q_num}: {parts[0]}"), voice, rate, p_q0))
+                for p_idx, part in enumerate(parts[1:], 1):
+                    p_qp = os.path.join(temp_dir, f"q_{idx}_{p_idx}.mp3")
+                    tasks.append(sem_tts(clean_tts_speech(part), voice, rate, p_qp))
+
+            p_ans = os.path.join(temp_dir, f"ans_{idx}.mp3")
+            tasks.append(sem_tts(clean_tts_speech(f"Correct answer is {c_txt}"), voice, rate, p_ans))
 
         p_outro = os.path.join(temp_dir, "outro.mp3")
-        tasks.append(sem_tts(outro_text, voice, rate, p_outro))
+        tasks.append(sem_tts(clean_tts_speech(outro_text), voice, rate, p_outro))
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -238,7 +247,7 @@ def build_short_quiz_audio_and_timeline(
         c_opt = str(q.get("correct_option", "A")).upper().strip()
 
         # Step 2a: Read Question Audio with 1.5s silence gap for blanks (____ / ....)
-        aud_q, dur_q = prepare_question_audio(q_num, q_txt, voice, rate, temp_dir, idx, sample_rate=sample_rate)
+        aud_q, dur_q = prepare_question_audio(q_num, q_txt, temp_dir, idx, sample_rate=sample_rate)
 
         combined_audio_frames.append(aud_q)
         timeline.append({
@@ -391,10 +400,10 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
     opt_d = slide_data.get("option_d", "")
     c_opt = str(slide_data.get("correct_option", "A")).upper().strip()
 
-    # 1. Question Number in Top Circle Badge (Center = 540, 180)
+    # 1. Question Number in Top Circle Badge (Center X = 540, Center Y = 245)
     q_num_str = str(q_num)
     nw = fonts["q_num"].getlength(q_num_str)
-    draw.text((int(center_x - nw / 2), 155), q_num_str, fill=(255, 255, 255, 255), font=fonts["q_num"])
+    draw.text((int(center_x - nw / 2), 222), q_num_str, fill=(255, 255, 255, 255), font=fonts["q_num"])
 
     # 2. Question Text in Upper Purple Box [120, 260, 960, 760]
     draw_centered_wrapped_text(
@@ -433,7 +442,7 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
         timer_txt = f"⏳ 00:0{rem_sec}"
         tw = fonts["timer"].getlength(timer_txt)
 
-        # Draw glowing timer badge above options (Y=780)
+        # Draw glowing timer badge above options (Y=775)
         draw.rounded_rectangle([center_x - (tw/2) - 20, 775, center_x + (tw/2) + 20, 830], radius=16, fill=(245, 158, 11, 245))
         draw.text((int(center_x - tw / 2), 776), timer_txt, fill=(255, 255, 255, 255), font=fonts["timer"])
 
@@ -441,16 +450,17 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
     if active_state == "QUESTION_REVEAL":
         corr_info = option_boxes.get(c_opt, option_boxes["A"])
         r = corr_info["rect"]
+        cy = (r[1] + r[3]) // 2
 
         # Outer Emerald Green Glowing Border (6px width)
         draw.rounded_rectangle([r[0]-3, r[1]-3, r[2]+3, r[3]+3], radius=32, fill=(16, 185, 129, 240))
         # Inner Emerald Soft Tint
         draw.rounded_rectangle([r[0], r[1], r[2], r[3]], radius=28, fill=(236, 253, 245, 255))
 
-        # Circle icon highlight letter
-        draw.ellipse([r[0]+12, r[1]+12, r[0]+82, r[3]-12], fill=(16, 185, 129, 255))
+        # Circle icon highlight letter: Perfect crisp 88x88px circle at X=138
+        draw.ellipse([94, cy - 44, 182, cy + 44], fill=(16, 185, 129, 255))
         lw = fonts["opt_text"].getlength(c_opt)
-        draw.text((int(r[0] + 47 - lw / 2), r[1] + 20), c_opt, fill=(255, 255, 255, 255), font=fonts["opt_text"])
+        draw.text((int(138 - lw / 2), cy - 28), c_opt, fill=(255, 255, 255, 255), font=fonts["opt_text"])
 
         # Correct Option Text in Bright Emerald Bold
         draw.text(
@@ -519,17 +529,36 @@ def render_short_quiz_video(
 
     print(f"Rendering Short Quiz Video ({total_frames} frames)...")
 
+    prev_slide = None
+    prev_frame_img = None
+
     for frame_idx in range(total_frames):
         current_time = frame_idx / fps
 
-        # Find active slide
-        active_slide = timeline[-1]
+        # Find active slide (remains on current slide during silence gaps, preventing OUTRO flashing)
+        active_slide = timeline[0]
         for slide in timeline:
-            if slide["start_time"] <= current_time < slide["end_time"]:
+            if current_time >= slide["start_time"]:
                 active_slide = slide
+            else:
                 break
 
         frame_img = render_short_quiz_frame(bg_solid, bg_card, active_slide, current_time, fonts)
+
+        # Smooth 0.3s Cross-Fade Transition when transitioning between question numbers
+        if (prev_slide and 
+            prev_slide.get("active_state") != "INTRO" and 
+            active_slide.get("active_state") == "QUESTION_READING" and
+            prev_slide.get("q_num") != active_slide.get("q_num")):
+            trans_start = active_slide["start_time"]
+            trans_dur = 0.3
+            if current_time - trans_start < trans_dur and prev_frame_img is not None:
+                alpha = (current_time - trans_start) / trans_dur
+                frame_img = Image.blend(prev_frame_img, frame_img, alpha)
+
+        prev_slide = active_slide
+        prev_frame_img = frame_img.copy()
+
         frame_rgb = frame_img.convert("RGB")
         process.stdin.write(frame_rgb.tobytes())
 
