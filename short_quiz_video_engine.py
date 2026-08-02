@@ -162,11 +162,11 @@ def build_short_quiz_audio_and_timeline(
     questions = script_data.get("questions", [])
     intro_hook = script_data.get(
         "intro_hook",
-        f"If you can answer these {len(questions)} questions correctly, your English is truly outstanding! Test your knowledge now!"
+        "If you get 10 out of 10 on this quiz, your English is AMAZING! Let's test your skills now!"
     )
     outro_text = script_data.get(
         "outro_text",
-        "How many questions did you get right? Comment your score below!"
+        "How many did you get right out of 10? Comment your score below!"
     )
 
     if progress_callback:
