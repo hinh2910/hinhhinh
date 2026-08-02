@@ -9,6 +9,12 @@ MỤC TIÊU CỐT LÕI:
 Tạo ra một kịch bản học tiếng Anh có TỶ LỆ GIỮ CHÂN NGUỜI XEM (AVD - Average View Duration) CAO NHẤT, đánh đúng vào tâm lý ngượng ngùng, sợ nói sai của người học, truyền cảm hứng và giúp họ nói tiếng Anh tự nhiên.
 
 NGUYÊN TẮC BẮT BUỘC (NON-NEGOTIABLES):
+0. QUY TẮC HOOK 30 GIÂY ĐẦU (30-SECOND RETENTION HOOK RULE - BẮT BUỘC TUÂN THỦ 100%):
+   - Lời thoại mở đầu Part 1 (`intro_story`) của Host Annie PHẢI ĐÁP ỨNG 3 YẾU TỐ NGUYÊN TẮC TRONG 30 GIÂY ĐẦU:
+     (1) What You Learn: Tuyên bố rõ ràng người xem sẽ học được gì cho chủ đề {topic} (3 câu trắc nghiệm Quiz B1-B2 và bài luyện Shadowing 15 câu câu chuyện thực tế).
+     (2) Emotional Pain Point: Đánh đúng nỗi sợ ngập ngừng, sợ nói sai khi gặp tình huống {topic}.
+     (3) Reason to Stay Till the End: Đưa ra lý do bắt buộc người xem phải ở lại đến giây cuối cùng (Ví dụ: "Make sure you stay until Part 2 to solve our final challenge question, and complete all 15 shadowing sentences in Part 3 to fully unlock your speaking confidence!").
+
 1. VĂN PHONG CHÂN THẬT, KHÔNG DÙNG THUẬT NGỮ META PROMPT:
    - TUYỆT ĐỐI KHÔNG cho Host Annie đọc các từ ngữ thuật ngữ meta như "tricky comment challenge", "meta instruction", "prompt prompt"!
    - Lời thoại của Host Annie (ở Part 1, Part 2, Part 4) phải trực tiếp hướng tới khán giả YouTube, ấm áp, truyền cảm hứng như một người bạn đồng hành thực sự.
@@ -312,10 +318,13 @@ NGUYÊN TẮC BIÊN KỊCH ĐẮT GIÁ (TĂNG TỶ LỆ GIỮ CHÂN KHÁN GIẢ 
    - Part 2 (Câu 6 đến 10): Natural Conversation Boost (Các mẫu câu phản xạ giao tiếp tự nhiên).
    - Part 3 (Câu 11 đến 15): Native Fluency & Idioms (Các cụm thành ngữ & diễn đạt nâng cao chuẩn người bản xứ).
 
-2. **Yêu cầu biên soạn `intro_hook` (Tạo Động Lực & Tưởng Tượng Ngữ Cảnh)**:
-   - KHÔNG liệt kê tên Part 1, Part 2, Part 3 lặp lại trong lời nói intro_hook.
-   - Lời dẫn `intro_hook` phải nhấn mạnh tầm quan trọng của việc luyện tập và đưa người học vào tình huống thực tế:
-     "Imagine you are in {topic} right now and you need to speak English with complete confidence. Learning these 15 sentences is extremely important because they will help you respond naturally without hesitation. Don't just watch passively—repeat out loud during the YOUR TURN section and let's master all 15 sentences together today. Are you ready? Let's start with sentence number 1!"
+2. **QUY TẮC HOOK 30 GIÂY ĐẦU (30-SECOND RETENTION HOOK RULE - BẮT BUỘC TUÂN THỦ 100%)**:
+   - Lời dẫn `intro_hook` (dưới 30 giây) PHẢI ĐẢM BẢO 3 YẾU TỐ:
+     (1) What You Learn: Nêu rõ người xem sẽ làm chủ 15 mẫu câu giao tiếp chuẩn Native Speaker cho {topic} chia thành 3 phần (Daily ➔ Natural ➔ Native Fluency).
+     (2) Context Imagination: Tưởng tượng đưa người học vào tình huống thực tế sống động của {topic}.
+     (3) Reason to Stay Till the End: Đưa ra lý do bắt buộc người xem phải ở lại đến Part 3 (Ví dụ: "Make sure you stay until Part 3, where we unlock the most powerful native idioms that will instantly make you sound 100% fluent! Stay until sentence 15 to test your progress!").
+   - Mẫu lời dẫn `intro_hook` chuẩn:
+     "Imagine you are in {topic} right now and every conversation is happening in English. These 15 practical sentences will help you communicate naturally, avoid awkward situations, and travel with confidence. Make sure you stay until Part 3, where we unlock the most powerful native idioms that will instantly boost your fluency. Don't just watch passively—repeat out loud during the YOUR TURN section and let's master all 15 sentences together today. Are you ready? Let's start with sentence number 1!"
 
 3. **NGUYÊN TẮC CHẤT LƯỢNG MẪU CÂU (BẮT BUỘC TUÂN THỦ 100%)**:
    - **TUYỆT ĐỐI KHÔNG DÙNG CÂU QUÁ DỄ / QUÁ CƠ BẢN** (NGHIÊM CẤM các câu ngô nghê kiểu sách vở như: "How are you?", "I am fine", "Where is the bathroom?", "I haven't decided yet", "What is your name?"). Khán giả sẽ thấy quá dễ và thoát video ngay lập tức!
