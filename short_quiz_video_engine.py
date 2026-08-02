@@ -436,39 +436,69 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
         tw = fonts["title"].getlength(title_txt)
         draw.text((int(center_x - tw / 2), 340), title_txt, fill=(255, 215, 0, 255), font=fonts["title"])
 
-        # Main Hook / Outro Text Container (1 SINGLE LINE ONLY with Word-by-Word Highlight)
+        # Main Text Chunking with Large 54pt Bold Font (TikTok/Shorts Dynamic Subtitle Style)
         full_text = slide_data.get("text", "")
         word_list = slide_data.get("words", [])
         start_t = slide_data.get("start_time", 0.0)
         rel_time = current_time - start_t
 
-        active_w_idx = -1
+        font_large = fonts["hook"]  # 54pt Bold Font
+        max_chunk_w = 880
+
+        # Build chunks of words that fit within 880px at 54pt font
+        words_split = full_text.split()
+        chunks = []
+        curr_chunk = []
+        curr_w = 0
+
+        for i, w in enumerate(words_split):
+            w_len = font_large.getlength(w + " ")
+            if curr_w + w_len > max_chunk_w and curr_chunk:
+                chunks.append(curr_chunk)
+                curr_chunk = [(w, i)]
+                curr_w = w_len
+            else:
+                curr_chunk.append((w, i))
+                curr_w += w_len
+        if curr_chunk:
+            chunks.append(curr_chunk)
+
+        # Determine active word & active chunk based on rel_time
+        active_w_idx = 0
         if word_list:
             for idx, w_info in enumerate(word_list):
+                if rel_time >= w_info.get("start", 0):
+                    active_w_idx = idx
                 if w_info.get("start", 0) <= rel_time <= w_info.get("end", 0):
                     active_w_idx = idx
                     break
 
-        fit_font = get_fit_font(full_text, max_w=920, start_size=46, min_size=24)
-        words_split = full_text.split()
+        # Find which chunk contains active_w_idx
+        active_chunk = chunks[0] if chunks else []
+        for chk in chunks:
+            chk_indices = [idx for _, idx in chk]
+            if active_w_idx in chk_indices:
+                active_chunk = chk
+                break
 
-        total_w = sum(fit_font.getlength(w + " ") for w in words_split)
-        x = (1080 - total_w) / 2
+        # Render ONLY the active chunk in 54pt Large Bold Font
+        tot_w = sum(font_large.getlength(w + " ") for w, _ in active_chunk)
+        x = (1080 - tot_w) / 2
         y = 560
 
-        for i, w in enumerate(words_split):
-            w_len = fit_font.getlength(w)
-            if i == active_w_idx:
-                # Active word glowing highlight badge
+        for w, idx in active_chunk:
+            w_len = font_large.getlength(w)
+            if idx == active_w_idx:
+                # Active spoken word highlight badge
                 draw.rounded_rectangle(
-                    [x - 6, y - 4, x + w_len + 6, y + fit_font.size + 6],
-                    radius=8,
+                    [x - 8, y - 4, x + w_len + 8, y + font_large.size + 8],
+                    radius=10,
                     fill=(255, 215, 0, 255)
                 )
-                draw.text((x, y), w, fill=(46, 16, 101, 255), font=fit_font)
+                draw.text((x, y), w, fill=(46, 16, 101, 255), font=font_large)
             else:
-                draw.text((x, y), w, fill=(255, 255, 255, 255), font=fit_font)
-            x += fit_font.getlength(w + " ")
+                draw.text((x, y), w, fill=(255, 255, 255, 255), font=font_large)
+            x += font_large.getlength(w + " ")
 
         return canvas
 
