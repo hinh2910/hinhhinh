@@ -40,6 +40,20 @@ def get_audio_from_mp3(mp3_path, sample_rate=44100):
 FONT_PATH_BOLD = "C:/Windows/Fonts/segoeuib.ttf"
 FONT_PATH_REG = "C:/Windows/Fonts/segoeui.ttf"
 
+def get_fit_font(text, max_w=880, start_size=46, min_size=24):
+    """Find font size so text fits on exactly 1 line within max_w width."""
+    for sz in range(start_size, min_size - 1, -2):
+        try:
+            f = ImageFont.truetype(FONT_PATH_BOLD, sz)
+        except Exception:
+            f = ImageFont.load_default()
+        if f.getlength(text) <= max_w:
+            return f
+    try:
+        return ImageFont.truetype(FONT_PATH_BOLD, min_size)
+    except Exception:
+        return ImageFont.load_default()
+
 def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
@@ -228,15 +242,36 @@ def build_short_quiz_audio_and_timeline(
     aud_hook = get_audio_from_mp3(p_hook, sample_rate=sample_rate)
     dur_hook = len(aud_hook) / sample_rate
 
+    # Calculate word timestamps for intro hook word-by-word highlighting
+    words_hook = [w.strip() for w in intro_hook.split() if w.strip()]
+    hook_word_timings = []
+    try:
+        from audio_engine import align_audio_with_whisper
+        w_aligned = align_audio_with_whisper(p_hook)
+        if w_aligned:
+            hook_word_timings = w_aligned
+    except Exception as e:
+        print(f"Whisper align info for hook: {e}")
+
+    if not hook_word_timings:
+        w_dur = dur_hook / max(1, len(words_hook))
+        for i, w in enumerate(words_hook):
+            hook_word_timings.append({
+                "word": w,
+                "start": i * w_dur,
+                "end": (i + 1) * w_dur
+            })
+
     combined_audio_frames.append(aud_hook)
     timeline.append({
         "start_time": current_time,
         "end_time": current_time + dur_hook,
         "active_state": "INTRO",
-        "text": intro_hook
+        "text": intro_hook,
+        "words": hook_word_timings
     })
-    current_time += dur_hook + 0.4
-    combined_audio_frames.append(create_silence(0.4, sample_rate))
+    current_time += dur_hook + 0.2
+    combined_audio_frames.append(create_silence(0.2, sample_rate))
 
     # 2. Questions Loop
     for idx, q in enumerate(questions):
@@ -312,12 +347,32 @@ def build_short_quiz_audio_and_timeline(
     aud_outro = get_audio_from_mp3(p_outro, sample_rate=sample_rate)
     dur_outro = len(aud_outro) / sample_rate
 
+    words_outro = [w.strip() for w in outro_text.split() if w.strip()]
+    outro_word_timings = []
+    try:
+        from audio_engine import align_audio_with_whisper
+        w_aligned = align_audio_with_whisper(p_outro)
+        if w_aligned:
+            outro_word_timings = w_aligned
+    except Exception as e:
+        print(f"Whisper align info for outro: {e}")
+
+    if not outro_word_timings:
+        w_dur = dur_outro / max(1, len(words_outro))
+        for i, w in enumerate(words_outro):
+            outro_word_timings.append({
+                "word": w,
+                "start": i * w_dur,
+                "end": (i + 1) * w_dur
+            })
+
     combined_audio_frames.append(aud_outro)
     timeline.append({
         "start_time": current_time,
         "end_time": current_time + dur_outro,
         "active_state": "OUTRO",
-        "text": outro_text
+        "text": outro_text,
+        "words": outro_word_timings
     })
     current_time += dur_outro
 
@@ -379,18 +434,41 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
         # Header Title Overlay
         title_txt = "ENGLISH QUIZ CHALLENGE!" if active_state == "INTRO" else "QUIZ COMPLETE!"
         tw = fonts["title"].getlength(title_txt)
-        draw.text((int(center_x - tw / 2), 320), title_txt, fill=(255, 215, 0, 255), font=fonts["title"])
+        draw.text((int(center_x - tw / 2), 340), title_txt, fill=(255, 215, 0, 255), font=fonts["title"])
 
-        # Main Hook / CTA Text Container
-        txt = slide_data.get("text", "")
-        draw_centered_wrapped_text(
-            draw,
-            text=txt,
-            font=fonts["hook"],
-            box=[120, 520, 960, 1400],
-            fill_color=(255, 255, 255, 255),
-            line_spacing=1.35
-        )
+        # Main Hook / Outro Text Container (1 SINGLE LINE ONLY with Word-by-Word Highlight)
+        full_text = slide_data.get("text", "")
+        word_list = slide_data.get("words", [])
+        start_t = slide_data.get("start_time", 0.0)
+        rel_time = current_time - start_t
+
+        active_w_idx = -1
+        if word_list:
+            for idx, w_info in enumerate(word_list):
+                if w_info.get("start", 0) <= rel_time <= w_info.get("end", 0):
+                    active_w_idx = idx
+                    break
+
+        fit_font = get_fit_font(full_text, max_w=920, start_size=46, min_size=24)
+        words_split = full_text.split()
+
+        total_w = sum(fit_font.getlength(w + " ") for w in words_split)
+        x = (1080 - total_w) / 2
+        y = 560
+
+        for i, w in enumerate(words_split):
+            w_len = fit_font.getlength(w)
+            if i == active_w_idx:
+                # Active word glowing highlight badge
+                draw.rounded_rectangle(
+                    [x - 6, y - 4, x + w_len + 6, y + fit_font.size + 6],
+                    radius=8,
+                    fill=(255, 215, 0, 255)
+                )
+                draw.text((x, y), w, fill=(46, 16, 101, 255), font=fit_font)
+            else:
+                draw.text((x, y), w, fill=(255, 255, 255, 255), font=fit_font)
+            x += fit_font.getlength(w + " ")
 
         return canvas
 
