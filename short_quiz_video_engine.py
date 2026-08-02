@@ -44,7 +44,7 @@ def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
         font_hook = ImageFont.truetype(FONT_PATH_BOLD, 52)
-        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 56)        # Large 56pt bold font for question number
+        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 64)        # Large 64pt bold font for question number
         font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 54)        # Heavy bold font matching screenshot
         font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 44)      # Prominent 44pt bold font for options
         font_timer = ImageFont.truetype(FONT_PATH_BOLD, 56)
@@ -72,7 +72,7 @@ def get_quiz_fonts():
 def prepare_question_audio(q_num, q_txt, temp_dir, idx, sample_rate=44100):
     """
     Loads pre-generated TTS audio files for question text.
-    If the question contains blanks ('______', '......'), inserts a 1.5s silence gap in between.
+    If the question contains blanks ('______', '......'), inserts a 1.0s silence gap in between.
     """
     clean_q = re.sub(r'^(?:Question\s*\d+:?\s*)', '', q_txt, flags=re.IGNORECASE).strip()
     raw_parts = re.split(r'(?:_{2,}|\.{2,}|\(blank\))', clean_q)
@@ -86,14 +86,14 @@ def prepare_question_audio(q_num, q_txt, temp_dir, idx, sample_rate=44100):
     audio_segments = []
     p_q0 = os.path.join(temp_dir, f"q_{idx}_0.mp3")
     audio_segments.append(get_audio_from_mp3(p_q0, sample_rate=sample_rate))
-    audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
+    audio_segments.append(create_silence(1.0, sample_rate=sample_rate))
 
     for p_idx, part in enumerate(parts[1:], 1):
         p_qp = os.path.join(temp_dir, f"q_{idx}_{p_idx}.mp3")
         if os.path.exists(p_qp):
             audio_segments.append(get_audio_from_mp3(p_qp, sample_rate=sample_rate))
             if p_idx < len(parts) - 1:
-                audio_segments.append(create_silence(1.5, sample_rate=sample_rate))
+                audio_segments.append(create_silence(1.0, sample_rate=sample_rate))
 
     combined_aud = np.concatenate(audio_segments)
     return combined_aud, len(combined_aud) / sample_rate
@@ -404,10 +404,14 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
     opt_d = slide_data.get("option_d", "")
     c_opt = str(slide_data.get("correct_option", "A")).upper().strip()
 
-    # 1. Question Number in Top Circle Badge (Center X = 540, Center Y = 245)
+    # 1. Question Number in Top Circle Badge (Center X = 540, Center Y = 246, Bright Gold Color)
     q_num_str = str(q_num)
-    nw = fonts["q_num"].getlength(q_num_str)
-    draw.text((int(center_x - nw / 2), 222), q_num_str, fill=(255, 255, 255, 255), font=fonts["q_num"])
+    bbox = fonts["q_num"].getbbox(q_num_str)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    text_x = center_x - text_w // 2 - bbox[0]
+    text_y = 246 - text_h // 2 - bbox[1]
+    draw.text((text_x, text_y), q_num_str, fill=(255, 215, 0, 255), font=fonts["q_num"])
 
     # 2. Question Text in Upper Purple Box [120, 260, 960, 760]
     draw_centered_wrapped_text(
@@ -549,16 +553,25 @@ def render_short_quiz_video(
 
         frame_img = render_short_quiz_frame(bg_solid, bg_card, active_slide, current_time, fonts)
 
-        # Smooth 0.3s Cross-Fade Transition when transitioning between question numbers
+        # Smooth 0.35s Slide-Left Push Transition when transitioning between questions
         if (prev_slide and 
             prev_slide.get("active_state") != "INTRO" and 
             active_slide.get("active_state") == "QUESTION_READING" and
             prev_slide.get("q_num") != active_slide.get("q_num")):
             trans_start = active_slide["start_time"]
-            trans_dur = 0.3
-            if current_time - trans_start < trans_dur and prev_frame_img is not None:
-                alpha = (current_time - trans_start) / trans_dur
-                frame_img = Image.blend(prev_frame_img, frame_img, alpha)
+            trans_dur = 0.35
+            dt = current_time - trans_start
+            if dt < trans_dur and prev_frame_img is not None:
+                prog = min(1.0, max(0.0, dt / trans_dur))
+                t = math.sin(prog * (math.pi / 2.0))
+                
+                offset_prev = int(-1080 * t)
+                offset_curr = int(1080 * (1.0 - t))
+                
+                slide_canvas = bg_solid.copy()
+                slide_canvas.paste(prev_frame_img, (offset_prev, 0))
+                slide_canvas.paste(frame_img, (offset_curr, 0))
+                frame_img = slide_canvas
 
         prev_slide = active_slide
         prev_frame_img = frame_img.copy()
