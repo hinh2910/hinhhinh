@@ -196,7 +196,7 @@ def build_short_quiz_audio_and_timeline(
 
         tasks = []
         p_hook = os.path.join(temp_dir, "intro_hook.mp3")
-        tasks.append(sem_tts(clean_tts_speech(intro_hook), voice, rate, p_hook))
+        tasks.append(sem_tts(clean_tts_speech(intro_hook), voice, "+5%", p_hook))
 
         for idx, q in enumerate(questions):
             q_num = q.get("q_num", idx + 1)
@@ -226,7 +226,7 @@ def build_short_quiz_audio_and_timeline(
             tasks.append(sem_tts(clean_tts_speech(f"Correct answer is {c_txt}"), voice, rate, p_ans))
 
         p_outro = os.path.join(temp_dir, "outro.mp3")
-        tasks.append(sem_tts(clean_tts_speech(outro_text), voice, rate, p_outro))
+        tasks.append(sem_tts(clean_tts_speech(outro_text), voice, "+5%", p_outro))
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
