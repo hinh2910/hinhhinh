@@ -150,6 +150,9 @@ def build_short_quiz_audio_and_timeline(
     Synthesize audio and build frame timeline for 9:16 Short Question Video.
     """
     temp_dir = "temp_short_quiz"
+    import shutil
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
     os.makedirs(temp_dir, exist_ok=True)
     sample_rate = 44100
 
@@ -175,8 +178,7 @@ def build_short_quiz_audio_and_timeline(
         sem = asyncio.Semaphore(8)
         async def sem_tts(txt, v, r, p):
             async with sem:
-                if not os.path.exists(p):
-                    await generate_single_tts(txt, voice=v, rate=r, output_path=p)
+                await generate_single_tts(txt, voice=v, rate=r, output_path=p)
 
         tasks = []
         p_hook = os.path.join(temp_dir, "intro_hook.mp3")
