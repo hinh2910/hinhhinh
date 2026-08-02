@@ -423,24 +423,27 @@ NGUYÊN TẮC BIÊN KỊCH ĐẮT GIÁ (TĂNG TỶ LỆ GIỮ CHÂN KHÁN GIẢ 
 """
 
 CHATGPT_SHORT_QUIZ_PROMPT = """Bạn là biên kịch chuyên nghiệp tạo kịch bản Video Short Trắc Nghiệm Tiếng Anh ("English Quiz Challenge") cho kênh "Shadowing English".
-Hãy tạo kịch bản LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI trắc nghiệm A, B, C, D trình độ B1-B2 kích thích người xem cho chủ đề "{topic}" theo đúng chuẩn định dạng JSON dưới đây.
+Hãy SÁNG TẠO MỚI kịch bản trắc nghiệm Tiếng Anh trọn vẹn LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI (A, B, C, D) ở trình độ B1-B2, kích thích người xem tương tác cho chủ đề "{topic}" theo đúng chuẩn định dạng JSON dưới đây.
 
 NGUYÊN TẮC BẮT BUỘC (NON-NEGOTIABLES):
-1. **LUÔN LUÔN LÀ 10 CÂU HỎI (EXACTLY 10 QUESTIONS)**: Mảng `"questions"` BẮT BUỘC PHẢI CÓ ĐỦ 10 CÂU HỎI (từ q_num = 1 đến q_num = 10).
-2. **CÂU HOOK 3 GIÂY ĐẦU CỰC KỲ DỄ HIỂU, ĐƠN GIẢN, NGẮN GỌN**:
-   - TUYỆT ĐỐI KHÔNG DÙNG TỪ CẦU KỲ RỪỜM RÀ (NGHIÊM CẤM dùng các từ rắc rối khó đọc như: "truly outstanding", "extraordinary", "unquestionably").
-   - Lời dẫn `intro_hook` phải cực kỳ dễ đọc, ai nhìn vào cũng hiểu ngay:
+1. **LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI (EXACTLY 10 QUESTIONS)**: Mảng `"questions"` BẮT BUỘC PHẢI CÓ ĐỦ 10 CÂU HỎI ĐƯỢC ĐÁNH SỐ TỪ `q_num: 1` ĐẾN `q_num: 10`. Không được tạo ít hơn 10 câu.
+2. **ĐỘ KHÓ VỪA PHẢI, HẤP DẪN (TRÌNH ĐỘ B1 - B2)**:
+   - TUYỆT ĐỐI KHÔNG làm câu hỏi quá dễ/trẻ con (như "I have an apple", "sit quietly").
+   - Hãy tập trung vào: Thành ngữ tự nhiên (Idioms), Phrasal Verbs, Collocations đời sống, Giới từ thông dụng, và Cấu trúc giao tiếp thực tế phù hợp cho chủ đề "{topic}".
+3. **CÂU HOOK 3 GIÂY ĐẦU CỰC KỲ DỄ HIỂU, ĐƠN GIẢN, NGẮN GỌN**:
+   - TUYỆT ĐỐI KHÔNG DÙNG TỪ CẦU KỲ RỜM RÀ HẠN CHẾ KHÓ ĐỌC (NGHIÊM CẤM dùng các từ rắc rối như: "truly outstanding", "extraordinary", "unquestionably").
+   - Lời dẫn `intro_hook` phải ngắn gọn, thu hút ngay:
      "If you get 10 out of 10 on this quiz, your English is AMAZING! Let's test your skills now!"
-3. **Mỗi câu hỏi gồm 4 đáp án A, B, C, D**:
-   - "q_num": Số thứ tự câu hỏi (1, 2, 3... đến 10).
-   - "question": Nội dung câu hỏi điền từ vào chỗ trống `______` hoặc câu hỏi ngắn đơn giản.
-   - "option_a", "option_b", "option_c", "option_d": 4 phương án lựa chọn.
-   - "correct_option": "A", "B", "C", hoặc "D".
-   - "correct_text": Đáp án đúng ngắn gọn (Ví dụ: "B: Beforehand").
-4. **"outro_text" Kêu gọi comment điểm số**:
-   - Lời kêu gọi ngắn ở cuối video: "How many did you get right out of 10? Comment your score below!"
+4. **CẤU TRÚC MỖI CÂU HỎI (A, B, C, D)**:
+   - `q_num`: Số thứ tự từ 1 đến 10.
+   - `question`: Câu hỏi điền từ vào chỗ trống `______` hoặc câu hỏi trắc nghiệm tự nhiên.
+   - `option_a`, `option_b`, `option_c`, `option_d`: 4 lựa chọn ngắn gọn, rõ ràng.
+   - `correct_option`: Ký tự đáp án đúng ("A", "B", "C", hoặc "D").
+   - `correct_text`: Nội dung đáp án đúng ngắn gọn (Ví dụ: "B: Beforehand" hoặc "C: hit the spot").
+5. **CÂU KẾT OUTRO KÊU GỌI BÌNH LUẬN**:
+   - `outro_text`: "How many did you get right out of 10? Comment your score below!"
 
-ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ TRẢ VỀ DUY NHẤT KHỐI JSON HỢP LỆ):
+ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ TRẢ VỀ DUY NHẤT KHỐI JSON HỢP LỆ, KHÔNG KÈM LỜI DẪN):
 ```json
 {{
   "title": "10-Question English Quiz | {topic}",
@@ -450,109 +453,30 @@ NGUYÊN TẮC BẮT BUỘC (NON-NEGOTIABLES):
   "questions": [
     {{
       "q_num": 1,
-      "question": "The teacher asked us ______ quietly.",
-      "option_a": "to sit",
-      "option_b": "sitting",
-      "option_c": "sit",
-      "option_d": "sat",
+      "question": "[Nội dung câu hỏi 1 B1-B2 điền chỗ trống ______ cho {topic}]",
+      "option_a": "[Đáp án A]",
+      "option_b": "[Đáp án B]",
+      "option_c": "[Đáp án C]",
+      "option_d": "[Đáp án D]",
       "correct_option": "A",
-      "correct_text": "A: to sit"
+      "correct_text": "A: [Nội dung đáp án A]"
     }},
     {{
       "q_num": 2,
-      "question": "She is interested ______ learning new languages.",
-      "option_a": "on",
-      "option_b": "at",
-      "option_c": "in",
-      "option_d": "with",
-      "correct_option": "C",
-      "correct_text": "C: in"
-    }},
-    {{
-      "q_num": 3,
-      "question": "What is the synonym of 'in advance'?",
-      "option_a": "Right now",
-      "option_b": "Beforehand",
-      "option_c": "Later on",
-      "option_d": "Suddenly",
+      "question": "[Nội dung câu hỏi 2 cho {topic}]",
+      "option_a": "[Đáp án A]",
+      "option_b": "[Đáp án B]",
+      "option_c": "[Đáp án C]",
+      "option_d": "[Đáp án D]",
       "correct_option": "B",
-      "correct_text": "B: Beforehand"
-    }},
-    {{
-      "q_num": 4,
-      "question": "We look forward to ______ you soon.",
-      "option_a": "see",
-      "option_b": "seeing",
-      "option_c": "saw",
-      "option_d": "seen",
-      "correct_option": "B",
-      "correct_text": "B: seeing"
-    }},
-    {{
-      "q_num": 5,
-      "question": "Choose the correct phrase: 'Let's play it by ___.'",
-      "option_a": "eye",
-      "option_b": "hand",
-      "option_c": "ear",
-      "option_d": "heart",
-      "correct_option": "C",
-      "correct_text": "C: ear"
-    }},
-    {{
-      "q_num": 6,
-      "question": "What does 'without a hitch' mean?",
-      "option_a": "With many problems",
-      "option_b": "Smoothly and perfectly",
-      "option_c": "Very slowly",
-      "option_d": "Expensively",
-      "correct_option": "B",
-      "correct_text": "B: Smoothly and perfectly"
-    }},
-    {{
-      "q_num": 7,
-      "question": "I'd rather book it ______ advance to be safe.",
-      "option_a": "in",
-      "option_b": "on",
-      "option_c": "at",
-      "option_d": "by",
-      "correct_option": "A",
-      "correct_text": "A: in"
-    }},
-    {{
-      "q_num": 8,
-      "question": "Could you point me ______ the right direction?",
-      "option_a": "at",
-      "option_b": "in",
-      "option_c": "to",
-      "option_d": "on",
-      "correct_option": "B",
-      "correct_text": "B: in"
-    }},
-    {{
-      "q_num": 9,
-      "question": "I'm leaning ______ the chef's special today.",
-      "option_a": "towards",
-      "option_b": "into",
-      "option_c": "for",
-      "option_d": "with",
-      "correct_option": "A",
-      "correct_text": "A: towards"
-    }},
-    {{
-      "q_num": 10,
-      "question": "That delicious meal really hit the ___.",
-      "option_a": "mark",
-      "option_b": "spot",
-      "option_c": "target",
-      "option_d": "goal",
-      "correct_option": "B",
-      "correct_text": "B: spot"
+      "correct_text": "B: [Nội dung đáp án B]"
     }}
+    // ... TỰ ĐỘNG SÁNG TẠO ĐẦY ĐỦ 10 CÂU HỎI TỪ q_num = 1 ĐẾN q_num = 10 HẤP DẪN VÀ THU HÚT
   ]
 }}
 ```
 
-Hãy tạo kịch bản JSON ĐỦ 10 CÂU HỎI hoàn chỉnh cho chủ đề: {topic}
+Hãy tạo kịch bản JSON ĐỦ 10 CÂU HỎI B1-B2 hoàn chỉnh và hấp dẫn cho chủ đề: {topic}
 """
 
 
