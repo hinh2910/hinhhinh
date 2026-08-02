@@ -12,8 +12,9 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from audio_engine import build_lesson_audio_and_timeline, build_short_audio_and_timeline, build_sentence_audio_and_timeline, generate_tts_sync, generate_srt_file
 from video_engine import render_lesson_video, concat_intro_and_lesson
 from short_video_engine import render_short_video
+from short_quiz_video_engine import render_short_quiz_video
 from sentence_video_engine import render_sentence_video
-from prompts import CHATGPT_SCRIPT_PROMPT, CHATGPT_SHORT_PROMPT, CHATGPT_SENTENCE_PROMPT, generate_youtube_metadata, generate_short_youtube_metadata, generate_sentence_youtube_metadata
+from prompts import CHATGPT_SCRIPT_PROMPT, CHATGPT_SHORT_PROMPT, CHATGPT_SENTENCE_PROMPT, CHATGPT_SHORT_QUIZ_PROMPT, generate_youtube_metadata, generate_short_youtube_metadata, generate_sentence_youtube_metadata
 
 
 app = Flask(__name__)
@@ -337,6 +338,75 @@ def process_short_video_job(job_id, title, text, voice="en-GB-LibbyNeural", rate
         render_jobs[job_id]["status_msg"] = str(e)
         render_jobs[job_id]["progress"] = 0
 
+def parse_short_quiz_script(raw_text_input):
+    raw_str = raw_text_input.strip()
+    if "```" in raw_str:
+        fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_str, flags=re.IGNORECASE)
+        if fence_match:
+            raw_str = fence_match.group(1).strip()
+    try:
+        data = json.loads(raw_str)
+        if isinstance(data, dict) and "questions" in data:
+            return data
+    except Exception:
+        pass
+
+    try:
+        cleaned = raw_str
+        cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', cleaned)
+        cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+        return json.loads(cleaned)
+    except Exception:
+        pass
+
+    raise ValueError("Không thể trích xuất kịch bản Short Quiz 'questions' hợp lệ từ JSON!")
+
+def process_short_quiz_video_job(job_id, script_data, voice="en-US-JennyNeural", rate="-5%"):
+    try:
+        def update_progress(msg, progress):
+            render_jobs[job_id]["status"] = "PROCESSING"
+            render_jobs[job_id]["status_msg"] = msg
+            render_jobs[job_id]["progress"] = int(progress * 100)
+
+        update_progress("Đang tổng hợp âm thanh & timeline Quiz Short...", 0.05)
+
+        safe_title = re.sub(r'[^\w\-]', '_', script_data.get("title", "short_quiz"))[:30]
+        timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+        video_filename = f"ShortQuiz_{safe_title}_{timestamp_str}.mp4"
+
+        output_mp4_path = os.path.join("output", video_filename)
+
+        render_short_quiz_video(
+            script_data,
+            voice=voice,
+            rate=rate,
+            output_video_path=output_mp4_path,
+            progress_callback=update_progress
+        )
+
+        yt_meta = generate_short_youtube_metadata(script_data.get("title", "English Quiz Challenge"), title_suggestion=script_data.get("title"))
+
+        render_jobs[job_id]["status"] = "COMPLETED"
+        render_jobs[job_id]["status_msg"] = "Xuất Video Short Question (9:16) Hoàn Tất!"
+        render_jobs[job_id]["progress"] = 100
+        render_jobs[job_id]["video_filename"] = video_filename
+        render_jobs[job_id]["srt_filename"] = None
+        render_jobs[job_id]["video_url"] = f"/outputs/{video_filename}"
+        render_jobs[job_id]["srt_url"] = None
+        render_jobs[job_id]["youtube_metadata"] = {
+            "title": yt_meta["title"],
+            "description": yt_meta["description"],
+            "pinned_comment": yt_meta.get("pinned_comment", "")
+        }
+
+        print(f"Short Quiz Job {job_id} COMPLETED SUCCESSFULLY: {video_filename}")
+
+    except Exception as e:
+        print(f"Error in process_short_quiz_video_job ({job_id}): {e}")
+        render_jobs[job_id]["status"] = "FAILED"
+        render_jobs[job_id]["status_msg"] = str(e)
+        render_jobs[job_id]["progress"] = 0
+
 def parse_sentence_script(raw_text_input):
     raw_str = raw_text_input.strip()
     if "```" in raw_str:
@@ -490,6 +560,8 @@ def get_prompt():
     
     if video_type == "short":
         formatted_prompt = CHATGPT_SHORT_PROMPT.format(topic=topic)
+    elif video_type == "short_quiz":
+        formatted_prompt = CHATGPT_SHORT_QUIZ_PROMPT.format(topic=topic)
     elif video_type == "sentence":
         formatted_prompt = CHATGPT_SENTENCE_PROMPT.format(topic=topic)
     elif video_type == "podcast":
@@ -582,6 +654,42 @@ def api_render_short():
     thread = threading.Thread(
         target=process_short_video_job,
         args=(job_id, parsed["title"], parsed["text"], voice, rate, clip_paths, parsed.get("target_word", ""), parsed.get("meaning", "")),
+        daemon=True
+    )
+    thread.start()
+
+    return jsonify({"job_id": job_id})
+
+@app.route("/api/render_short_quiz", methods=["POST"])
+def api_render_short_quiz():
+    data = request.json or {}
+    script_input = data.get("script", "")
+    voice = data.get("voice", "en-US-JennyNeural")
+    rate = data.get("rate", "-5%")
+
+    if not script_input.strip():
+        return jsonify({"error": "Vui lòng nhập kịch bản JSON cho Video Short Quiz!"}), 400
+
+    try:
+        parsed_script = parse_short_quiz_script(script_input)
+    except Exception as e:
+        return jsonify({"error": f"Lỗi định dạng JSON kịch bản Short Quiz: {str(e)}"}), 400
+
+    job_id = str(uuid.uuid4())[:8]
+    render_jobs[job_id] = {
+        "status": "PROCESSING",
+        "status_msg": "Đang khởi tạo Video Short Question...",
+        "progress": 0,
+        "video_filename": None,
+        "srt_filename": None,
+        "video_url": None,
+        "srt_url": None,
+        "youtube_metadata": None
+    }
+
+    thread = threading.Thread(
+        target=process_short_quiz_video_job,
+        args=(job_id, parsed_script, voice, rate),
         daemon=True
     )
     thread.start()

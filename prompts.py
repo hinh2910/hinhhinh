@@ -422,6 +422,63 @@ NGUYÊN TẮC BIÊN KỊCH ĐẮT GIÁ (TĂNG TỶ LỆ GIỮ CHÂN KHÁN GIẢ 
 }}
 
 ```
+CHATGPT_SHORT_QUIZ_PROMPT = """Bạn là biên kịch chuyên nghiệp tạo kịch bản Video Short Trắc Nghiệm Tiếng Anh ("English Quiz Challenge") cho kênh "Shadowing English".
+Hãy tạo kịch bản 5 đến 10 câu hỏi trắc nghiệm A, B, C, D trình độ B1-B2 kích thích người xem cho chủ đề "{topic}" theo đúng chuẩn định dạng JSON dưới đây.
+
+NGUYÊN TẮC BẮT BUỘC:
+1. "intro_hook": Lời dẫn 2 giây đầu bằng giọng đọc cực kỳ kích thích, giật gân (Ví dụ: "If you can answer all 5 questions correctly, your English is truly outstanding! Test your knowledge now!").
+2. "questions": Danh sách từ 5 đến 10 câu hỏi trắc nghiệm tiếng Anh B1-B2 hay, thú vị.
+3. Mỗi câu hỏi gồm:
+   - "q_num": Số thứ tự câu hỏi (1, 2, 3...).
+   - "question": Nội dung câu hỏi bằng tiếng Anh ngắn gọn, rõ ràng.
+   - "option_a", "option_b", "option_c", "option_d": 4 phương án lựa chọn.
+   - "correct_option": "A", "B", "C", hoặc "D".
+   - "correct_text": Đáp án đúng kèm nội dung (Ví dụ: "B: Leaning towards").
+4. "outro_text": Lời kêu gọi ngắn ở cuối video bảo khán giả comment số câu trả lời đúng của họ (Ví dụ: "How many questions did you get right? Comment your score below!").
+
+ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ TRẢ VỀ DUY NHẤT KHỐI JSON HỢP LỆ):
+```json
+{{
+  "title": "5-Question English Challenge | {topic}",
+  "theme": "{topic}",
+  "intro_hook": "If you can answer all 5 questions correctly, your English is truly outstanding! Test your knowledge now!",
+  "outro_text": "How many questions did you get right? Comment your score below!",
+  "questions": [
+    {{
+      "q_num": 1,
+      "question": "What is the synonym of 'in advance'?",
+      "option_a": "Right now",
+      "option_b": "Beforehand",
+      "option_c": "Later on",
+      "option_d": "Suddenly",
+      "correct_option": "B",
+      "correct_text": "B: Beforehand"
+    }},
+    {{
+      "q_num": 2,
+      "question": "Choose the correct phrase: 'Let's play it by ___.'",
+      "option_a": "eye",
+      "option_b": "hand",
+      "option_c": "ear",
+      "option_d": "heart",
+      "correct_option": "C",
+      "correct_text": "C: ear"
+    }},
+    {{
+      "q_num": 3,
+      "question": "What does 'without a hitch' mean?",
+      "option_a": "With many problems",
+      "option_b": "Smoothly and perfectly",
+      "option_c": "Very slowly",
+      "option_d": "Expensively",
+      "correct_option": "B",
+      "correct_text": "B: Smoothly and perfectly"
+    }}
+  ]
+}}
+```
+
+Hãy tạo kịch bản JSON hoàn chỉnh cho chủ đề: {topic}
 """
 
 

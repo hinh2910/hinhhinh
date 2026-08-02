@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnModePodcast = document.getElementById('btn-mode-podcast');
   const btnModeIelts = document.getElementById('btn-mode-ielts');
   const btnModeShort = document.getElementById('btn-mode-short');
+  const btnModeShortQuiz = document.getElementById('btn-mode-short-quiz');
   const shortClipsBox = document.getElementById('short-video-clips-box');
   const shadowingVoiceContainer = document.getElementById('shadowing-voice-container');
   const lblIntroVoice = document.getElementById('lbl-intro-voice');
@@ -25,13 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnModePodcast) btnModePodcast.classList.toggle('active', mode === 'podcast');
     if (btnModeIelts) btnModeIelts.classList.toggle('active', mode === 'ielts');
     if (btnModeShort) btnModeShort.classList.toggle('active', mode === 'short');
+    if (btnModeShortQuiz) btnModeShortQuiz.classList.toggle('active', mode === 'short_quiz');
 
     const rateSelect = document.getElementById('rate-select');
     if (rateSelect) rateSelect.value = '-5%';
 
     const mainVideoPlayer = document.getElementById('main-video-player');
 
-    if (mode === 'short') {
+    if (mode === 'short_quiz') {
+      if (shortClipsBox) shortClipsBox.style.display = 'none';
+      if (shadowingVoiceContainer) shadowingVoiceContainer.style.display = 'none';
+      if (lblIntroVoice) lblIntroVoice.innerText = '🎙️ Chọn Giọng Đọc Short Quiz:';
+      if (step1Title) step1Title.innerText = '📝 Bước 1: Lấy Prompt Quiz Trắc Nghiệm Short (9:16)';
+      if (step1Desc) step1Desc.innerText = 'Nhập chủ đề và copy prompt để ChatGPT tạo 5-10 câu hỏi trắc nghiệm A, B, C, D ngắn hấp dẫn.';
+      if (step2Title) step2Title.innerText = '📥 Bước 2: Dán Kịch Bản Short Quiz & Chọn Giọng Đọc';
+      if (step2Desc) step2Desc.innerText = 'Dán kịch bản Short Quiz từ ChatGPT, hệ thống sẽ tự động vẽ ô câu hỏi, chạy đếm ngược 3s kèm tiếng tích tắc và sáng đáp án đúng.';
+      if (mainVideoPlayer) mainVideoPlayer.classList.add('vertical-short');
+    } else if (mode === 'short') {
       if (shortClipsBox) shortClipsBox.style.display = 'block';
       if (shadowingVoiceContainer) shadowingVoiceContainer.style.display = 'none';
       if (lblIntroVoice) lblIntroVoice.innerText = '🎙️ Chọn Giọng Đọc Video Short:';
@@ -86,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnModePodcast) btnModePodcast.addEventListener('click', () => setVideoMode('podcast'));
   if (btnModeIelts) btnModeIelts.addEventListener('click', () => setVideoMode('ielts'));
   if (btnModeShort) btnModeShort.addEventListener('click', () => setVideoMode('short'));
+  if (btnModeShortQuiz) btnModeShortQuiz.addEventListener('click', () => setVideoMode('short_quiz'));
 
 
   // Step Navigation
@@ -181,7 +193,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       let res, data;
-      if (currentVideoMode === 'short') {
+      if (currentVideoMode === 'short_quiz') {
+        res = await fetch('/api/render_short_quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            script: scriptVal,
+            voice: introVoiceSelect ? introVoiceSelect.value : 'en-US-JennyNeural',
+            rate: rateSelect ? rateSelect.value : '-5%'
+          })
+        });
+      } else if (currentVideoMode === 'short') {
         const formData = new FormData();
         formData.append('script', scriptVal);
         formData.append('voice', introVoiceSelect.value);
