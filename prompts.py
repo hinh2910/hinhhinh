@@ -422,34 +422,33 @@ NGUYÊN TẮC BIÊN KỊCH ĐẮT GIÁ (TĂNG TỶ LỆ GIỮ CHÂN KHÁN GIẢ 
 }}
 """
 
-CHATGPT_SHORT_QUIZ_PROMPT = """Bạn là biên kịch chuyên nghiệp tạo kịch bản Video Short Trắc Nghiệm Tiếng Anh ("English Quiz Challenge") cho kênh "Shadowing English".
+CHATGPT_SHORT_QUIZ_PROMPT = """Bạn là biên kịch chuyên nghiệp tạo kịch bản Video Short Trắc Nhiệm Tiếng Anh ("English Quiz Challenge") cho kênh "Shadowing English".
 Hãy SÁNG TẠO MỚI kịch bản trắc nghiệm Tiếng Anh trọn vẹn LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI (A, B, C, D) có ĐỘ KHÓ TĂNG DẦN TỪ B1 ĐẾN B2+, kích thích người xem tương tác cho chủ đề "{topic}" theo đúng chuẩn định dạng JSON dưới đây.
 
 NGUYÊN TẮC BẮT BUỘC VỀ ĐỘ KHÓ VÀ CẤU TRÚC (NON-NEGOTIABLES):
-1. **LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI (EXACTLY 10 QUESTIONS)**: Mảng `"questions"` BẮT BUỘC PHẢI CÓ ĐỦ 10 CÂU HỎI ĐƯỢC ĐÁNH SỐ TỪ `q_num: 1` ĐẾN `q_num: 10`.
+1. **LUÔN LUÔN LÀ ĐÚNG 10 CÂU HỎI (EXACTLY 10 QUESTIONS)**: Mảng `"questions"` BẮT BUỘC PHẢI CÓ ĐỦ 10 CÂU HỎI ĐƯỢC ĐÁNH SỐ TỪ `q_num: 1` ĐẾN `q_num: 10`. Không được làm ít hơn 10 câu.
 
-2. **LỘ TRÌNH ĐỘ KHÓ TĂNG DẦN (DỄ -> KHÓ, KHÔNG CÓ CÂU HỎI QUÁ DỄ THẢM HỌA A1/A2)**:
-   - **NGHIÊM CẤM tuyệt đối các câu hỏi tiểu học/cơ bản A1-A2**: KHÔNG hỏi những câu quá dễ như "I drink coffee", "He doesn't like", "turn off the lights", "what is opposite of confident".
-   - **Câu 1 -> 3 (Khởi động B1)**: Phrasal verbs đời sống, collocations tự nhiên, giới từ phụ thuộc (vd: *catch up on*, *on short notice*, *take for granted*, *in advance*).
-   - **Câu 4 -> 7 (Trung cấp B1+ / B2)**: Thành ngữ thông dụng (Idioms), cấu trúc câu điều kiện/giả định, từ vựng theo chủ đề "{topic}" (vd: *play it by ear*, *without a hitch*, *hit the nail on the head*, *point in the right direction*).
-   - **Câu 8 -> 10 (Thử thách Nâng cao B2 / B2+)**: Thành ngữ người bản xứ nâng cao, collocations tinh tế, phrasal verbs nâng cao (vd: *burn the midnight oil*, *play devil's advocate*, *on the spur of the moment*, *hit the spot*, *see eye to eye*).
+2. **LỘ TRÌNH ĐỘ KHÓ TĂNG DẦN (DỄ -> KHÓ, TRÌNH ĐỘ B1 ĐẾN B2+)**:
+   - TUYỆT ĐỐI NGHIÊM CẤM tạo câu hỏi trình độ tiểu học/cơ bản A1-A2.
+   - **Câu 1 -> 3 (Trình độ B1)**: Tập trung vào phrasal verbs thông dụng, collocations tự nhiên trong đời sống và giới từ phụ thuộc phù hợp với chủ đề "{topic}".
+   - **Câu 4 -> 7 (Trình độ B1+ / B2)**: Tập trung vào thành ngữ giao tiếp (Idioms), cấu trúc ngữ pháp nâng cao, và từ vựng chuyên sâu cho chủ đề "{topic}".
+   - **Câu 8 -> 10 (Trình độ B2 / B2+)**: Thử thách nâng cao dành cho người bản xứ với thành ngữ phức tạp, collocations tinh tế và cụm từ giao tiếp nâng cao.
 
-3. **CÂU HOOK 3 GIÂY ĐẦU CỰC KỲ DỄ HIỂU, ĐƠN GIẢN, NGẮN GỌN**:
-   - TUYỆT ĐỐI KHÔNG DÙNG TỪ CẦU KỲ RỜM RÀ HẠN CHẾ KHÓ ĐỌC (NGHIÊM CẤM dùng các từ rắc rối như: "truly outstanding", "extraordinary", "unquestionably").
-   - Lời dẫn `intro_hook` phải ngắn gọn, thu hút ngay:
+3. **CÂU HOOK 3 GIÂY ĐẦU DỄ HIỂU**:
+   - Lời dẫn `intro_hook` phải ngắn gọn, dễ đọc, kích thích người xem kiểm tra trình độ:
      "If you get 10 out of 10 on this quiz, your English is AMAZING! Let's test your skills now!"
 
 4. **CẤU TRÚC MỖI CÂU HỎI (A, B, C, D)**:
    - `q_num`: Số thứ tự từ 1 đến 10.
-   - `question`: Câu hỏi điền từ vào chỗ trống `______` hoặc câu trắc nghiệm nghĩa thành ngữ/cấu trúc giao tiếp.
-   - `option_a`, `option_b`, `option_c`, `option_d`: 4 lựa chọn ngắn gọn, rõ ràng.
+   - `question`: Câu hỏi điền từ vào chỗ trống `______` hoặc câu hỏi trắc nghiệm nghĩa thành ngữ/cấu trúc giao tiếp.
+   - `option_a`, `option_b`, `option_c`, `option_d`: 4 đáp án phương án lựa chọn.
    - `correct_option`: Ký tự đáp án đúng ("A", "B", "C", hoặc "D").
-   - `correct_text`: Đáp án đúng ngắn gọn (Ví dụ: "B: Beforehand" hoặc "C: play it by ear").
+   - `correct_text`: Nội dung đáp án đúng ngắn gọn (Ví dụ định dạng: "A: [nội dung đáp án đúng]").
 
 5. **CÂU KẾT OUTRO KÊU GỌI BÌNH LUẬN**:
    - `outro_text`: "How many did you get right out of 10? Comment your score below!"
 
-ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ TRẢ VỀ DUY NHẤT KHỐI JSON HỢP LỆ, KHÔNG KÈM LỜI DẪN):
+ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ TRẢ VỀ DUY NHẤT KHỐI JSON HỢP LỆ, KHÔNG KÈM LỜI DẪN CỦA CHATGPT):
 ```json
 {{
   "title": "10-Question English Quiz | {topic}",
@@ -459,25 +458,25 @@ NGUYÊN TẮC BẮT BUỘC VỀ ĐỘ KHÓ VÀ CẤU TRÚC (NON-NEGOTIABLES):
   "questions": [
     {{
       "q_num": 1,
-      "question": "[Câu hỏi khởi động B1 điền chỗ trống ______ cho {topic}]",
+      "question": "[Tự sáng tạo câu hỏi B1 điền chỗ trống ______ cho {topic}]",
       "option_a": "[Đáp án A]",
       "option_b": "[Đáp án B]",
       "option_c": "[Đáp án C]",
       "option_d": "[Đáp án D]",
       "correct_option": "A",
-      "correct_text": "A: [Nội dung đáp án A]"
+      "correct_text": "A: [Đáp án A]"
     }},
     {{
       "q_num": 2,
-      "question": "[Câu hỏi B1+ cho {topic}]",
+      "question": "[Tự sáng tạo câu hỏi B1 cho {topic}]",
       "option_a": "[Đáp án A]",
       "option_b": "[Đáp án B]",
       "option_c": "[Đáp án C]",
       "option_d": "[Đáp án D]",
       "correct_option": "B",
-      "correct_text": "B: [Nội dung đáp án B]"
+      "correct_text": "B: [Đáp án B]"
     }}
-    // ... TỰ ĐỘNG SÁNG TẠO ĐỦ 10 CÂU HỎI TĂNG DẦN ĐỘ KHÓ TỪ B1 ĐẾN B2+ HẤP DẪN
+    // ... TỰ ĐỘNG SÁNG TẠO ĐỦ 10 CÂU HỎI TĂNG DẦN ĐỘ KHÓ TỪ B1 ĐẾN B2+ CHO CHỦ ĐỀ {topic}
   ]
 }}
 ```
