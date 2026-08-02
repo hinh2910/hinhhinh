@@ -180,57 +180,19 @@ def format_srt_time(seconds):
 
 def generate_srt_file(timeline, output_srt_path, intro_offset_sec=0.0):
     """
-    Generate standard .srt Subtitle File from timeline slides.
+    Generate standard .srt Subtitle File from word timeline.
     Supports time offset for intro.mp4 video padding.
-    Handles Shadowing, Short, and Sentence video modes.
     """
-    srt_entries = []
+    talking_slides = [t for t in timeline if t.get("is_talking", True) and t.get("text", "").strip()]
     
-    for slide in timeline:
-        # Skip pause sections (silent practice gaps)
-        if slide.get("is_pause", False):
-            continue
-            
-        # Get slide text depending on mode / keys present
-        text = slide.get("text", "").strip()
-        if not text:
-            state = slide.get("active_state", "")
-            if state in ["INTRO", "OUTRO"]:
-                text = slide.get("explanation", "") or slide.get("main_sentence", "")
-            elif state == "MAIN_SENTENCE":
-                text = slide.get("main_sentence", "")
-            elif state == "EXPLANATION":
-                text = slide.get("explanation", "")
-            elif state == "EXAMPLE_INTRO":
-                text = "Example,"
-            elif state in ["DEMO_Q", "PRACTICE_Q_SPEAKING"]:
-                text = slide.get("dialogue_question", "")
-            elif state in ["DEMO_A", "PRACTICE_A_SPEAKING"]:
-                text = slide.get("dialogue_answer", "")
-            elif state == "REPEAT_INSTR":
-                text = "Now, repeat after me."
-
-        text = strip_emojis(text).strip()
-        if not text:
-            continue
-
-        start_t = slide.get("start_time", 0.0) + intro_offset_sec
-        end_t = slide.get("end_time", 0.0) + intro_offset_sec
-        
-        if end_t <= start_t:
-            continue
-            
-        srt_entries.append({
-            "start_time": start_t,
-            "end_time": end_t,
-            "text": text
-        })
-        
     with open(output_srt_path, "w", encoding="utf-8") as f:
-        for idx, entry in enumerate(srt_entries, 1):
-            start_str = format_srt_time(entry["start_time"])
-            end_str = format_srt_time(entry["end_time"])
-            f.write(f"{idx}\n{start_str} --> {end_str}\n{entry['text']}\n\n")
+        for idx, slide in enumerate(talking_slides, 1):
+            start_t = slide["start_time"] + intro_offset_sec
+            end_t = slide["end_time"] + intro_offset_sec
+            start_str = format_srt_time(start_t)
+            end_str = format_srt_time(end_t)
+            text = slide["text"].strip()
+            f.write(f"{idx}\n{start_str} --> {end_str}\n{text}\n\n")
 
     return output_srt_path
 
