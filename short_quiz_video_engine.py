@@ -44,7 +44,7 @@ def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
         font_hook = ImageFont.truetype(FONT_PATH_BOLD, 52)
-        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 52)        # Crisp 52pt bold font for question number
+        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 72)        # Prominent 72pt bold font for question number
         font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 54)        # Heavy bold font matching screenshot
         font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 44)      # Prominent 44pt bold font for options
         font_timer = ImageFont.truetype(FONT_PATH_BOLD, 56)
@@ -404,13 +404,14 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
     opt_d = slide_data.get("option_d", "")
     c_opt = str(slide_data.get("correct_option", "A")).upper().strip()
 
-    # 1. Question Number in Top Circle Badge (Center X = 540, Center Y = 246, Bright Gold Color)
+    # 1. Question Number in Top Circle Badge (Bullseye Center Y = 275, Bright Gold Color)
     q_num_str = str(q_num)
     bbox = fonts["q_num"].getbbox(q_num_str)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
-    text_x = center_x - text_w // 2 - bbox[0]
-    text_y = 246 - text_h // 2 - bbox[1]
+    cx = 536 if q_num_str == "1" else center_x
+    text_x = cx - text_w // 2 - bbox[0]
+    text_y = 275 - text_h // 2 - bbox[1]
     draw.text((text_x, text_y), q_num_str, fill=(255, 215, 0, 255), font=fonts["q_num"])
 
     # 2. Question Text in Upper Purple Box [120, 260, 960, 760]
