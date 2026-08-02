@@ -44,7 +44,7 @@ def get_quiz_fonts():
     try:
         font_title = ImageFont.truetype(FONT_PATH_BOLD, 64)
         font_hook = ImageFont.truetype(FONT_PATH_BOLD, 52)
-        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 64)        # Large 64pt bold font for question number
+        font_q_num = ImageFont.truetype(FONT_PATH_BOLD, 52)        # Crisp 52pt bold font for question number
         font_q_text = ImageFont.truetype(FONT_PATH_BOLD, 54)        # Heavy bold font matching screenshot
         font_opt_text = ImageFont.truetype(FONT_PATH_BOLD, 44)      # Prominent 44pt bold font for options
         font_timer = ImageFont.truetype(FONT_PATH_BOLD, 56)
@@ -440,19 +440,8 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
             font=fonts["opt_text"]
         )
 
-    # 4. State: QUESTION_TICKING (3-Second Clock Countdown Timer Animation)
-    if active_state == "QUESTION_TICKING":
-        start_t = slide_data.get("start_time", current_time)
-        end_t = slide_data.get("end_time", current_time + 3.0)
-        dur = max(0.1, end_t - start_t)
-        rem_sec = max(1, math.ceil(end_t - current_time))
-
-        timer_txt = f"⏳ 00:0{rem_sec}"
-        tw = fonts["timer"].getlength(timer_txt)
-
-        # Draw glowing timer badge above options (Y=775)
-        draw.rounded_rectangle([center_x - (tw/2) - 20, 775, center_x + (tw/2) + 20, 830], radius=16, fill=(245, 158, 11, 245))
-        draw.text((int(center_x - tw / 2), 776), timer_txt, fill=(255, 255, 255, 255), font=fonts["timer"])
+    # 4. State: QUESTION_TICKING (3-Second Clock Countdown Sound Effect - No visual text badge overlay)
+    pass
 
     # 5. State: QUESTION_REVEAL (Highlight Correct Option Box)
     if active_state == "QUESTION_REVEAL":
@@ -553,28 +542,8 @@ def render_short_quiz_video(
 
         frame_img = render_short_quiz_frame(bg_solid, bg_card, active_slide, current_time, fonts)
 
-        # Smooth 0.35s Slide-Left Push Transition when transitioning between questions
-        if (prev_slide and 
-            prev_slide.get("active_state") != "INTRO" and 
-            active_slide.get("active_state") == "QUESTION_READING" and
-            prev_slide.get("q_num") != active_slide.get("q_num")):
-            trans_start = active_slide["start_time"]
-            trans_dur = 0.35
-            dt = current_time - trans_start
-            if dt < trans_dur and prev_frame_img is not None:
-                prog = min(1.0, max(0.0, dt / trans_dur))
-                t = math.sin(prog * (math.pi / 2.0))
-                
-                offset_prev = int(-1080 * t)
-                offset_curr = int(1080 * (1.0 - t))
-                
-                slide_canvas = bg_solid.copy()
-                slide_canvas.paste(prev_frame_img, (offset_prev, 0))
-                slide_canvas.paste(frame_img, (offset_curr, 0))
-                frame_img = slide_canvas
-
+        # Clean instant slide cut between questions (No bulky slide animation)
         prev_slide = active_slide
-        prev_frame_img = frame_img.copy()
 
         frame_rgb = frame_img.convert("RGB")
         process.stdin.write(frame_rgb.tobytes())
