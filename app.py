@@ -362,7 +362,7 @@ def parse_short_quiz_script(raw_text_input):
 
     raise ValueError("Không thể trích xuất kịch bản Short Quiz 'questions' hợp lệ từ JSON!")
 
-def process_short_quiz_video_job(job_id, script_data, voice="en-US-JennyNeural", rate="-5%"):
+def process_short_quiz_video_job(job_id, script_data, voice="en-US-AvaNeural", rate="+3%"):
     try:
         def update_progress(msg, progress):
             render_jobs[job_id]["status"] = "PROCESSING"
@@ -665,8 +665,8 @@ def api_render_short():
 def api_render_short_quiz():
     data = request.json or {}
     script_input = data.get("script", "")
-    voice = data.get("voice", "en-US-JennyNeural")
-    rate = data.get("rate", "-5%")
+    voice = data.get("voice", "en-US-AvaNeural")
+    rate = data.get("rate", "+3%")
 
     if not script_input.strip():
         return jsonify({"error": "Vui lòng nhập kịch bản JSON cho Video Short Quiz!"}), 400

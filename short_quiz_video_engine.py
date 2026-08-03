@@ -155,8 +155,8 @@ def load_clock_ticking_audio(sample_rate=44100, target_duration=3.0):
 
 def build_short_quiz_audio_and_timeline(
     script_data,
-    voice="en-US-JennyNeural",
-    rate="-5%",
+    voice="en-US-AvaNeural",
+    rate="+3%",
     output_audio_path="output/short_quiz_audio.wav",
     progress_callback=None
 ):
@@ -232,7 +232,7 @@ def build_short_quiz_audio_and_timeline(
 
     asyncio.run(pregenerate_tts())
 
-    ticking_audio_3s = load_clock_ticking_audio(sample_rate=sample_rate, target_duration=3.0)
+    ticking_audio_2s = load_clock_ticking_audio(sample_rate=sample_rate, target_duration=2.5)
 
     # 1. Intro Hook
     if progress_callback:
@@ -270,8 +270,8 @@ def build_short_quiz_audio_and_timeline(
         "text": intro_hook,
         "words": hook_word_timings
     })
-    current_time += dur_hook + 0.2
-    combined_audio_frames.append(create_silence(0.2, sample_rate))
+    current_time += dur_hook + 0.15
+    combined_audio_frames.append(create_silence(0.15, sample_rate))
 
     # 2. Questions Loop
     for idx, q in enumerate(questions):
@@ -302,9 +302,9 @@ def build_short_quiz_audio_and_timeline(
         })
         current_time += dur_q
 
-        # Step 2b: 3-Second Clock Ticking Sound Effect & Timer
-        dur_tick = 3.0
-        combined_audio_frames.append(ticking_audio_3s)
+        # Step 2b: 2.5-Second Clock Ticking Sound Effect & Timer (snappier pacing)
+        dur_tick = 2.5
+        combined_audio_frames.append(ticking_audio_2s)
         timeline.append({
             "start_time": current_time,
             "end_time": current_time + dur_tick,
@@ -339,8 +339,8 @@ def build_short_quiz_audio_and_timeline(
             "correct_option": c_opt,
             "text": f"Correct answer is {c_opt}"
         })
-        current_time += dur_ans + 0.5
-        combined_audio_frames.append(create_silence(0.5, sample_rate))
+        current_time += dur_ans + 0.25
+        combined_audio_frames.append(create_silence(0.25, sample_rate))
 
     # 3. Outro CTA
     p_outro = os.path.join(temp_dir, "outro.mp3")
@@ -583,8 +583,8 @@ def render_short_quiz_frame(bg_solid, bg_card, slide_data, current_time, fonts):
 
 def render_short_quiz_video(
     script_data,
-    voice="en-US-JennyNeural",
-    rate="-5%",
+    voice="en-US-AvaNeural",
+    rate="+3%",
     output_video_path="output/short_quiz_output.mp4",
     progress_callback=None
 ):

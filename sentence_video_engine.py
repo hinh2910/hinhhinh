@@ -296,10 +296,13 @@ def render_sentence_frame(
             max_lines=None
         )
 
-    # 4. EXPLANATION / CONTEXT (Dynamically placed below main_sent: max(280, main_end_y + 12))
+    # 4. EXPLANATION / CONTEXT (Dynamically placed below main_sent)
+    #    Capped to 2 lines so the divider always stays at/above Y=520,
+    #    leaving at least 460px below for Q&A (4 lines) + YOUR TURN + soundwave.
+    exp_end_y = main_end_y  # default: no explanation drawn
     if explanation:
         exp_y_start = max(280, main_end_y + 12)
-        draw_text_with_word_indices(
+        exp_end_y = draw_text_with_word_indices(
             draw,
             text=explanation,
             words=words if active_state == "EXPLANATION" else [],
@@ -310,28 +313,32 @@ def render_sentence_frame(
             active_time=current_time,
             normal_color=(71, 85, 105, 255),
             align_center=True,
-            max_lines=None
+            max_lines=2
         )
 
 
-    # 5. SUBTLE DIVIDER LINE (Y=475)
-    draw.line([220, 475, 1080, 475], fill=(217, 119, 6, 90), width=2)
+
+    # 5. SUBTLE DIVIDER LINE (Dynamic Y: below explanation, capped at 520 so Q&A+pause fits below)
+    divider_y = max(460, exp_end_y + 30)
+    divider_y = min(divider_y, 550)  # hard ceiling: still leaves ~430px for Q&A + YOUR TURN + soundwave
+    draw.line([220, divider_y, 1080, divider_y], fill=(217, 119, 6, 90), width=2)
 
     # 6. MINI DIALOGUE AREA (Question & Answer)
     left_x = 180
     right_x = 650
-    dialogue_y = 495
+    dialogue_y = divider_y + 20
 
     is_q_active = active_state in ["DEMO_Q", "PRACTICE_Q_SPEAKING", "PRACTICE_Q_PAUSE"]
     is_a_active = active_state in ["DEMO_A", "PRACTICE_A_SPEAKING", "PRACTICE_A_PAUSE"]
 
-    # Question
+    # Question header
     hdr_q_color = (217, 119, 6, 255) if is_q_active else (148, 163, 184, 255)
     draw.text((left_x, dialogue_y), "Question:", fill=hdr_q_color, font=fonts["dlg_hdr"])
+    q_end_y = dialogue_y + fonts["dlg_hdr"].size  # fallback if no q_text
 
     if q_text:
         q_font = fonts["dlg_body_small"] if len(q_text.split()) > 8 else fonts["dlg_body"]
-        draw_text_with_word_indices(
+        q_end_y = draw_text_with_word_indices(
             draw,
             text=q_text,
             words=words if is_q_active else [],
@@ -342,16 +349,17 @@ def render_sentence_frame(
             active_time=current_time,
             normal_color=(30, 41, 59, 255) if is_q_active else (148, 163, 184, 255),
             align_center=False,
-            max_lines=None
+            max_lines=4
         )
 
-    # Answer
+    # Answer header
     hdr_a_color = (4, 120, 87, 255) if is_a_active else (148, 163, 184, 255)
     draw.text((right_x, dialogue_y), "Answer:", fill=hdr_a_color, font=fonts["dlg_hdr"])
+    a_end_y = dialogue_y + fonts["dlg_hdr"].size  # fallback if no a_text
 
     if a_text:
         a_font = fonts["dlg_body_small"] if len(a_text.split()) > 8 else fonts["dlg_body"]
-        draw_text_with_word_indices(
+        a_end_y = draw_text_with_word_indices(
             draw,
             text=a_text,
             words=words if is_a_active else [],
@@ -362,8 +370,11 @@ def render_sentence_frame(
             active_time=current_time,
             normal_color=(30, 41, 59, 255) if is_a_active else (148, 163, 184, 255),
             align_center=False,
-            max_lines=None
+            max_lines=4
         )
+
+    # Actual bottom of dialogue block (tallest of Q or A column)
+    dialogue_bottom_y = max(q_end_y, a_end_y)
 
 
 
@@ -376,24 +387,32 @@ def render_sentence_frame(
 
         active_color = (217, 119, 6) if active_state == "PRACTICE_Q_PAUSE" else (4, 120, 87)
 
-        # Status text without missing font emoji box
+        # "YOUR TURN!" placed 30px below Q&A block (no arbitrary floor — budget handles space)
+        status_y = dialogue_bottom_y + 30
+
         status_str = "YOUR TURN! SPEAK NOW!"
         sw = fonts["status"].getlength(status_str)
-        draw.text((int(center_x - sw / 2), 750), status_str, fill=(active_color[0], active_color[1], active_color[2], 255), font=fonts["status"])
+        draw.text(
+            (int(center_x - sw / 2), status_y),
+            status_str,
+            fill=(active_color[0], active_color[1], active_color[2], 255),
+            font=fonts["status"]
+        )
 
-        # Progress bar
+        # Progress bar: 10px below status text
         bar_x = 350
-        bar_y = 805
+        bar_y = status_y + fonts["status"].size + 10
         bar_w = 600
         draw.rounded_rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + 12], radius=6, fill=(226, 232, 240, 255))
         if progress > 0:
             fill_w = int(bar_w * progress)
             draw.rounded_rectangle([bar_x, bar_y, bar_x + fill_w, bar_y + 12], radius=6, fill=(active_color[0], active_color[1], active_color[2], 255))
 
-        # Dynamic Soundwave during pause (Shifted down to Y=900 to eliminate text overlap)
-        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=900, num_bars=35, bar_color=active_color)
+        # Soundwave: 55px below progress bar, clamped to canvas bottom
+        soundwave_y = min(bar_y + 55, 980)
+        draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=soundwave_y, num_bars=35, bar_color=active_color)
     else:
-        # Dynamic Soundwave during host/speaker talking (Shifted down to Y=900 to eliminate text overlap)
+        # Dynamic Soundwave during host/speaker talking
         talk_color = (217, 119, 6) if is_q_active else ((4, 120, 87) if is_a_active else (217, 119, 6))
         draw_soundwave_graphic(draw, real_bar_heights, center_x=center_x, center_y=900, num_bars=35, bar_color=talk_color)
 
